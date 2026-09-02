@@ -1,0 +1,19 @@
+# Build spatial motion profiles from ingested target-link bins.
+# All profile knobs live here — L_sub is the Ablation-3 variable (100/200/300/400).
+
+input:
+  dir: data/processed
+  samples: samples.parquet
+  bins: bins.parquet
+
+output:
+  dir: data/processed
+  profiles_file: profiles_l{L}.npz
+  sub_map_file: link_sub_map_l{L}.parquet
+  stats: profile_stats_l{L}.json
+
+params:
+  bin_size_m: 10.0
+  l_sub_m: 200.0        # sub-link length (Ablation 3: 100/200/300/400)
+  max_bins: 40          # pad length = 400m/10m, covers the largest L_sub
+  v_invalid_above: 33.3 # m/s (~120 km/h): bins above this are marked invalid

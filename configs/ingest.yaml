@@ -1,0 +1,18 @@
+# Ingest: raw corridor parquet -> target-link tables + link-window mean_speed
+# All preprocessing knobs live here — do not edit the script to switch experiments.
+
+input:
+  files:
+    - data/raw_hdfs/part-00002.parquet   # local copy pulled from HDFS (beijing_week1/samples)
+
+output:
+  dir: data/processed
+  samples: samples.parquet      # one row per sample (trajectory pass on target link)
+  bins: bins.parquet            # bin-level long table for seg_mark==1 rows
+  link_window: link_window.parquet  # (target_link_id, window_id) aggregation
+  stats: ingest_stats.json
+
+params:
+  bin_size_m: 10.0        # must match data field bin_size_m
+  window_s: 3600          # time-window length in seconds (aligned to epoch floor)
+  min_td_target_s: 0.1    # drop samples whose target-segment traversal time <= this

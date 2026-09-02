@@ -1,0 +1,23 @@
+# --- data: stays on the server, never upload ---
+data/
+*.parquet
+*.npz
+*.snappy
+
+# --- runtime artifacts ---
+runtime/
+runs/
+checkpoints/
+*.ckpt
+*.pt
+*.log
+
+# --- python ---
+__pycache__/
+*.pyc
+*.egg-info/
+.ipynb_checkpoints/
+
+# --- misc ---
+.DS_Store
+*.swp
