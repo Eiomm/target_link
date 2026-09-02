@@ -15,7 +15,7 @@
 | Step 2 | 定位真实数据 + 理解 schema | ✅ 基本完成（1 个待确认问题） |
 | Step 3 | trajectory → spatial profile 预处理 | ✅ 完成（ingest + 去重 + sub-link 切分 + profile） |
 | Step 4 | Encoder 实现 | ✅ 完成（smoke 全过） |
-| Step 5 | multi-trajectory link 聚合 | ⬜ 未开始 |
+| Step 5 | multi-trajectory link 聚合 | ✅ 完成（smoke 全过） |
 | Step 6 | 接入下游 RP / ETA | ⬜ 未开始（ETA 可直接做，RP 标签待定义） |
 | Step 7 | debug 子集 overfit test | ⬜ 未开始 |
 | — | 四组 Ablation + configs | ⬜ 未开始 |
@@ -150,9 +150,8 @@ target_link/
 2. ~~写 ingest 脚本~~ ✅ 完成（`tools/ingest.py` + `configs/ingest.yaml`），产出见 §7。
 3. ~~实现 spatial profile 构建~~ ✅ 完成（`tools/build_profiles.py` + `configs/profiles.yaml`），产出见 §8。
 4. ~~实现 Encoder~~ ✅ 完成（`target_link_v1/models/encoder.py` + `tools/smoke_encoder.py`），产出见 §9。
-5. **multi-trajectory → link 聚合**（下一步起点）：(sub-link, window) 内 K 条 r_traj 取 mean（spec §8）。
-5. multi-trajectory → link 聚合（mean）。
-6. 接入 ETA 下游 + debug 子集 overfit 验证（shape / loss / mask / NaN / 无泄漏）。
+5. ~~multi-trajectory → link 聚合~~ ✅ 完成（`target_link_v1/models/aggregation.py` + `data/groups.py` + `tools/smoke_aggregation.py`），产出见 §10。
+6. **接入 ETA 下游 + debug 子集 overfit**（下一步起点）：shape / loss / mask / NaN / 无泄漏。
 7. 之后才进入四组 Ablation（Stage 1 优先：MeanSpeed / MeanSpeed-MLP / Ours）。
 
 ---
@@ -272,3 +271,33 @@ tools/smoke_encoder.py               # 真实数据 smoke（shape/mask/不变量
 - **invalid 上下文效应**：挖掉首个 valid bin → 4095/4096 的 r 改变 ✓
 - **residual 平移不变**：全体速度 +5 m/s → residual 模式 r 不变（Ablation 2 语义在实现层成立）；absolute 模式则有反应（对照）✓
 - d-sweep（Ablation 4）：32/64/128/256 → out 128 维，参数量 57.5K / 215K / 832K / 3.27M
+
+---
+
+## 10. Step 5 聚合产出（2026-09-02 完成）
+
+### 10.1 产出文件
+
+```
+target_link_v1/models/aggregation.py   # scatter_mean + LinkAggregator（spec §8，参数无关）
+target_link_v1/data/groups.py          # (link, sub, window) 分组索引 + 组对齐分块
+tools/smoke_aggregation.py             # 真实数据 smoke（正确性/恒等/梯度/键交叉验证）
+```
+
+### 10.2 实现要点
+
+1. **分组键 = (link_id, sub_id, window_id)**：`sub_id` 只在 link 内唯一，必须带 link id（踩过一次：sub_map/link_window 的列名都是 `target_link_id`）。
+2. **聚合 = 可微 scatter-mean**（`index_add_` + bincount）：无参数、梯度按 1/K 回传到每条轨迹的 encoder pass，对应 spec §8"固定 mean，不比较 attention pooling"。
+3. **组对齐分块**（`group_aligned_chunks`）：行按组排序后在组边界切 chunk，保证同组 profile 不跨 batch —— 这是 Step 6 训练 loop 的 batching 基础。
+
+### 10.3 smoke 结果（profiles_l200.npz 全量 263,400 条，CUDA）
+
+- 263,400 profiles → **122,767 个 (sub-link, window) 组**（108,768 links × 2 windows）
+- **K 分布：p50=1、p90=4、max=101；58.6% 的组只有 1 条轨迹** → 多数组聚合退化为恒等，均值聚合的长尾影响集中在少数大组
+- r_link (122767, 128) 有限；scatter-mean vs 独立逐组重算 allclose ✓；K=1 恒等 ✓
+- backward 经 scatter-mean 到 encoder：55 个梯度张量全有限非零 ✓
+- **键语义交叉验证**：单 sub-link 的组（sub=link）上，聚合的 sub 级 v̄ 与生产 `link_window.mean_speed` 相关 **0.931**、中位相对偏差 6.8%（算术平均 vs 生产 L/ΣT_diff 调和式平均的合理差异）→ 分组键正确
+
+### 10.4 本步新发现的工程约束
+
+- **train 模式（dropout 开启）下 PyTorch efficient attention 的 batch 上限 65535**（seed/offset 限制，eval 不受限）→ 训练 batch 需 < 65535（实际远小于，无影响，但要记住）

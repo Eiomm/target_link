@@ -1,0 +1,28 @@
+# ETA downstream harness (spec §9) — Stage 1 variants: speed / speed-mlp / ours
+data:
+  profiles_npz: data/processed/profiles_l200.npz
+  samples_parquet: data/processed/samples.parquet
+  link_window_parquet: data/processed/link_window.parquet
+  v_norm: 33.3
+  split: {train: 0.8, val: 0.1, test: 0.1, seed: 0}   # BY LINK (no link spans splits)
+
+model:
+  hidden: 256
+  depth: 2
+  dropout: 0.1
+  encoder: {d_model: 128, n_layers: 4, n_heads: 4, dropout: 0.1, out_dim: 128}
+
+train:
+  batch_size: 4096
+  epochs: 30
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  log_every: 5
+
+overfit:            # Step 6 debug subset (wiring sanity, dropout off)
+  n_samples: 2048
+  epochs: 400
+  lr: 3.0e-3
+
+output:
+  dir: runtime/eta
