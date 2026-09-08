@@ -45,6 +45,32 @@ def value_at_min_bin(col: str):
     return s.getField("_v").alias(col)
 
 
+def cap_samples_per_link(df, n: int, seed: int = 42):
+    """Deterministic per-full-link cap: keep <= n distinct sample_id per target_link_id.
+
+    Whole-sample retention: this filters ROWS to the chosen (target_link, sample_id)
+    pairs, so every bin/sub of a kept sample survives intact (never row-level).
+    Unit = one *pass* (distinct sample_id == a vehicle crossing that link once),
+    which maps 1:1 onto curves/training rows. Selection is stable: order by
+    hash(f"{seed}:{sample_id}") then sample_id, take the first n per link — the
+    same input always yields the same kept set (no cross-passage random drift).
+
+    n <= 0 => returned unchanged.
+    """
+    if n <= 0:
+        return df
+    from pyspark.sql import Window
+    from pyspark.sql import functions as F
+    salt = F.concat(F.lit(f"{seed}:"), F.col("sample_id"))
+    sel = (df.select("target_link_id", "sample_id").distinct()
+           .withColumn("_h", F.hash(salt))
+           .withColumn("_rk", F.row_number().over(
+               Window.partitionBy("target_link_id")
+                     .orderBy(F.col("_h"), F.col("sample_id"))))
+           .where(F.col("_rk") <= n).drop("_rk", "_h"))
+    return df.join(sel, ["target_link_id", "sample_id"], "inner")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--inputs", required=True)
@@ -59,6 +85,11 @@ def main() -> None:
     ap.add_argument("--curves-partitions", type=int, default=200)
     ap.add_argument("--shuffle-partitions", type=int, default=800)
     ap.add_argument("--driver-memory", default="8g")
+    ap.add_argument("--max-trajs-per-link", type=int, default=0,
+                    help="per full link cap: keep <=N distinct sample_id (whole "
+                         "sample retained); 0 = off (default, no behaviour change)")
+    ap.add_argument("--cap-seed", type=int, default=42,
+                    help="seed for the deterministic per-link sampler")
     args = ap.parse_args()
 
     from pyspark.sql import SparkSession, Window
@@ -74,10 +105,20 @@ def main() -> None:
     L = float(args.l_sub_m)
     bs, cap = float(args.bin_size_m), float(args.v_invalid_above)
 
-    raw = spark.read.parquet(args.inputs).select(*RAW_COLS) \
+    # --inputs accepts a comma-separated list of globs (e.g. the 7 days 17~23),
+    # enabling ONE merged job whose curves_meta edges are computed over the whole
+    # corpus in a single pass (never splice per-day metas together).
+    paths = [p.strip() for p in args.inputs.split(",") if p.strip()]
+    raw = spark.read.parquet(*paths).select(*RAW_COLS) \
         .where(F.col("seg_mark") == 1).drop("seg_mark")
     if args.sample_fraction < 1.0:
+        if args.max_trajs_per_link > 0:
+            print("[cap] WARNING: --sample-fraction is ROW-level and splits samples; "
+                  "--max-trajs-per-link is the sample-level lever. Using both is "
+                  "probably not what you want.")
         raw = raw.sample(withReplacement=False, fraction=args.sample_fraction, seed=42)
+    if args.max_trajs_per_link > 0:
+        raw = cap_samples_per_link(raw, args.max_trajs_per_link, args.cap_seed)
     n_rows_raw = raw.count()
 
     # dedup (sample_id, bin_idx): prefer valid T_diff, then max ratio (ingest)

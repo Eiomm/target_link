@@ -1,35 +1,22 @@
 #!/usr/bin/env bash
-# Submit tools/build_curves_spark.py (v2.1 merged pipeline: raw -> curve shards
-# in ONE pure-SQL job — no executor python needed, minipy3 is enough).
-# Three tiers, same pattern/env as scripts/submit_ingest_yarn.sh.
+# Submit tools/stats_week_links.py — 7-day link/traj census over beijing_week_biz
+# raw table. Three tiers, same env/pattern as submit_curves_yarn.sh.
 #
-#   MODE=local  small-sample run on this pod (qwen12 + pyspark 3.5.9)
+#   MODE=local  single-hour run on this pod (data/raw_hdfs/...)
 #   MODE=dry    print the yarn spark-submit command without executing
-#   MODE=yarn   real submission (default)
+#   MODE=yarn   real submission over the full 7 days (default)
 #
-#   OUT_DIR=hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link/curves_spark/day20260817 \
-#   DAY=20260817 MODE=yarn bash scripts/submit_curves_yarn.sh
-#
-#   WEEK capped run (ONE job over 7 days, per-link cap N): set INPUT_GLOB to the
-#   comma-separated day globs (build_curves_spark splits on comma) so edges/meta
-#   are computed once over the whole corpus:
-#   OUT_DIR=.../curves_spark/week_cap10 MAX_TRAJS_PER_LINK=10 \
-#     INPUT_GLOB='.../beijing_week_biz/samples/event_hour=2026081[7-9]*/part-*.parquet,.../beijing_week_biz/samples/event_hour=2026082[0-3]*/part-*.parquet' \
-#     MODE=yarn bash scripts/submit_curves_yarn.sh
+#   OUT_DIR=hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link/week_stats/7d \
+#   MODE=yarn bash scripts/submit_week_stats_yarn.sh
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
 
 MODE="${MODE:-yarn}"
-DAY="${DAY:?set DAY=YYYYMMDD}"
-HOURS="${HOURS:-*}"
-SAMPLE_FRACTION="${SAMPLE_FRACTION:-1.0}"
-MAX_TRAJS_PER_LINK="${MAX_TRAJS_PER_LINK:-0}"
-CAP_SEED="${CAP_SEED:-42}"
-
+DAY="${DAY:-}"                      # empty => full 7 days (all event_hour=20*)
 INPUT_BASE="${INPUT_BASE:-hdfs://DClusterNmg3/user/bigdata-dp/user/liruifeng/traffic_traj_encoder/beijing_week_biz/samples}"
-INPUT_GLOB="${INPUT_GLOB:-${INPUT_BASE}/event_hour=${DAY}${HOURS}/part-*.parquet}"
+INPUT_GLOB="${INPUT_GLOB:-${INPUT_BASE}/event_hour=2026*/part-*.parquet}"
 OUT_DIR="${OUT_DIR:-}"
 
 QUEUE="${QUEUE:-root.xinsi_yanfaerzu_default}"
@@ -39,8 +26,7 @@ EXECUTOR_CORES="${EXECUTOR_CORES:-2}"
 EXECUTOR_MEMORY="${EXECUTOR_MEMORY:-8g}"
 EXECUTOR_OVERHEAD="${EXECUTOR_OVERHEAD:-4096}"
 DRIVER_MEMORY="${DRIVER_MEMORY:-12g}"
-SHUFFLE_PARTITIONS="${SHUFFLE_PARTITIONS:-800}"
-CURVES_PARTITIONS="${CURVES_PARTITIONS:-200}"
+SHUFFLE_PARTITIONS="${SHUFFLE_PARTITIONS:-1200}"
 
 MINIPY3_TGZ="${MINIPY3_TGZ:-hdfs://DClusterNmg3/user/bigdata-dp/common-env/minipy3.tgz}"
 PYSPARK_PYTHON_CLUSTER="./minipy3/minipy3/bin/python"
@@ -49,19 +35,14 @@ SPARK_SUBMIT="${SPARK_SUBMIT:-/usr/local/spark-current/bin/spark-submit}"
 QWEN12_PY="${QWEN12_PY:-/nfs/dataset-ofs-494-1/project/user/junao/ruiqian/qwen12/bin/python}"
 SPARK_LOCAL_DIRS="${SPARK_LOCAL_DIRS:-/nfs/dataset-ofs-494-1/project/user/junao/sparktmp}"
 
-suffix=""
-[[ "$SAMPLE_FRACTION" != "1.0" ]] && suffix="_f${SAMPLE_FRACTION}"
-
 case "$MODE" in
   local)
+    : "${DAY:?DAY required for local run}"
     exec env -u SPARK_HOME SPARK_LOCAL_DIRS="$SPARK_LOCAL_DIRS" \
-        PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" tools/build_curves_spark.py \
-        --inputs "data/raw_hdfs/event_hour=${DAY}${HOURS}/part-*.parquet" \
-        --out "${OUT_DIR:-data/curves_spark/day${DAY}${HOURS}${suffix}}" \
-        --master 'local[8]' --driver-memory 6g \
-        --sample-fraction "$SAMPLE_FRACTION" \
-        --max-trajs-per-link "$MAX_TRAJS_PER_LINK" --cap-seed "$CAP_SEED" \
-        --curves-partitions 8 --shuffle-partitions 32
+        PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" tools/stats_week_links.py \
+        --inputs "data/raw_hdfs/event_hour=${DAY}*/part-*.parquet" \
+        --out "${OUT_DIR:-data/_stats/week_local}" \
+        --master 'local[8]' --driver-memory 6g --shuffle-partitions 64
     ;;
   dry | yarn)
     : "${OUT_DIR:?OUT_DIR is required for yarn (full hdfs:// path)}"
@@ -73,7 +54,7 @@ case "$MODE" in
       "$SPARK_SUBMIT"
       --master yarn --deploy-mode cluster
       --queue "$QUEUE"
-      --name "tl_curves_${DAY}${HOURS//\*/}"
+      --name "tl_week_links_7d"
       --conf "spark.yarn.dist.archives=${MINIPY3_TGZ}#minipy3"
       --conf "spark.pyspark.python=${PYSPARK_PYTHON_CLUSTER}"
       --driver-memory "$DRIVER_MEMORY"
@@ -84,13 +65,10 @@ case "$MODE" in
       --conf "spark.dynamicAllocation.minExecutors=${MIN_EXECUTORS}"
       --conf "spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
       --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer"
-      tools/build_curves_spark.py
+      tools/stats_week_links.py
       --inputs "$INPUT_GLOB"
       --out "$OUT_DIR"
       --master yarn
-      --sample-fraction "$SAMPLE_FRACTION"
-      --max-trajs-per-link "$MAX_TRAJS_PER_LINK" --cap-seed "$CAP_SEED"
-      --curves-partitions "$CURVES_PARTITIONS"
       --shuffle-partitions "$SHUFFLE_PARTITIONS"
     )
     echo "# command to run:"
