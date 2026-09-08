@@ -20,7 +20,18 @@ args=(tools/build_windows_spark.py --inputs "$INPUT_GLOB" --out "$OUT_DIR"
 [[ -n "${LINKS:-}" ]] && args+=(--links "$LINKS")
 case "$MODE" in
   local)
-    exec "${PYTHON:-python3}" "${args[@]}" --master "${LOCAL_MASTER:-local[2]}"
+    # same three-tier conventions as submit_curves_yarn.sh: qwen12 python when
+    # present, SPARK_HOME unset (pip pyspark), scratch dirs off the root disk,
+    # and an explicit local-JVM heap (default 1g GC-thrashes on this pipeline)
+    if [ -z "${PYTHON:-}" ] && [ -x /nfs/dataset-ofs-494-1/project/user/junao/ruiqian/qwen12/bin/python ]; then
+      PYTHON=/nfs/dataset-ofs-494-1/project/user/junao/ruiqian/qwen12/bin/python
+    fi
+    PYTHON="${PYTHON:-python3}"
+    exec env -u SPARK_HOME \
+        SPARK_LOCAL_DIRS="${SPARK_LOCAL_DIRS:-/nfs/dataset-ofs-494-1/project/user/junao/sparktmp}" \
+        PYSPARK_PYTHON="$PYTHON" \
+        PYSPARK_SUBMIT_ARGS="--driver-memory ${LOCAL_DRIVER_MEMORY:-6g} pyspark-shell" \
+        "$PYTHON" "${args[@]}" --master "${LOCAL_MASTER:-local[2]}"
     ;;
   dry|yarn)
     [[ "$OUT_DIR" == hdfs://* && "$INPUT_GLOB" == hdfs://* ]] || {
@@ -37,6 +48,7 @@ case "$MODE" in
       --conf spark.dynamicAllocation.enabled=true
       --conf "spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS:-40}"
       --conf "spark.dynamicAllocation.minExecutors=${MIN_EXECUTORS:-2}"
+      --conf spark.serializer=org.apache.spark.serializer.KryoSerializer
       "${args[@]}" --master yarn)
     printf '%q ' "${cmd[@]}"
     printf '\n'
