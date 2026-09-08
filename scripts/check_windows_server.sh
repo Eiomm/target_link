@@ -20,6 +20,11 @@ export SPARK_LOCAL_IP="${SPARK_LOCAL_IP:-127.0.0.1}"
 # this pod: ParOldGen 99%, suite stalled >10min while a single test alone
 # passes). Raise the heap BEFORE any SparkSession starts.
 export PYSPARK_SUBMIT_ARGS="--driver-memory ${DRIVER_MEMORY:-4g} pyspark-shell"
+# The pod exports SPARK_HOME=/usr/local/spark-current (an older cluster JVM);
+# pip pyspark must launch its own bundled spark-submit or SparkSession startup
+# dies with "Constructor SparkSession([SparkContext, HashMap]) does not exist"
+# (verified on this pod). Same convention as submit_*_yarn.sh local mode.
+unset SPARK_HOME
 # keep shuffle spill off the 20G-quota root disk when a scratch dir exists
 if [ -z "${SPARK_LOCAL_DIRS:-}" ]; then
   for d in /nfs/dataset-ofs-494-1/project/user/junao/sparktmp; do
