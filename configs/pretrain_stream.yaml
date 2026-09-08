@@ -1,0 +1,28 @@
+# Stage-1 pretraining in STREAM mode: consumes build_curves_spark shards
+# directly (no corpus npz). Same model/train sections as pretrain.yaml.
+data:
+  mode: stream
+  shards: data/curves_spark/smoke3      # <out> of tools/build_curves_spark.py
+  workers: 0                            # loader workers (0 = in-process)
+  split:
+    mode: time                          # past->future: val = latest windows (a
+    val_fraction: 0.02                  # sample's curves share its window — no
+                                         # sample leakage; shard fallback if the
+                                         # corpus has too few windows to cut)
+model:
+  encoder: {d_model: 128, n_layers: 4, n_heads: 4, max_bins: 40, out_dim: 128, v_norm: 33.3}
+  dec_layers: 1
+  n_buckets: 16
+train:
+  epochs: 2
+  batch_size: 512
+  lr: 3.0e-4
+  weight_decay: 0.01
+  lambda_attr: 0.2
+  mask_span: 3
+  mask_ratio: 0.55
+  val_fraction: 0.02                    # fraction of SHARDS held out for val
+  max_rows_per_epoch: 400000            # smoke cap; 0 = full epoch
+  log_every: 1
+output:
+  dir: runtime/pretrain

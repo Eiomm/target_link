@@ -34,10 +34,12 @@ def main() -> None:
     tr = np.random.default_rng(0).permutation(data.rows_of(0))[: int(cfg["overfit"]["n_samples"])]
     L = torch.from_numpy(data.L_n[tr]).to(device)
     V = torch.from_numpy(data.v_n[tr]).to(device)
-    Y = torch.from_numpy(data.log_y[tr]).to(device)
+    # z-scored target (train-split stats) is now the default in eta_data — raw
+    # log_y stalls at the mean-prediction plateau (see runtime/logs/debug_overfit.log)
+    Y = torch.from_numpy(data.z_y[tr]).to(device)
     B = {k: torch.from_numpy(v).to(device) if isinstance(v, np.ndarray) else v
          for k, v in data.batch(tr).items()}
-    print(f"[debug] {len(tr)} samples | log_y var {Y.var().item():.4f} (mean-pred floor)",
+    print(f"[debug] {len(tr)} samples | target var {Y.var().item():.4f} (mean-pred floor)",
           flush=True)
 
     for name, ekw in (

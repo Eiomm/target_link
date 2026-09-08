@@ -1,0 +1,42 @@
+input:
+  files:
+  - data/raw_hdfs/event_hour=2026082107/part-00000-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00001-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00002-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00003-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00004-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00005-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00006-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00007-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00008-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00009-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00010-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00011-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00012-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00013-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082107/part-00014-10c4091c-eb54-403c-88d0-072fbe1b1efe.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00000-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00001-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00002-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00003-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00004-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00005-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00006-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00007-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00008-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00009-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00010-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00011-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00012-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00013-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+  - data/raw_hdfs/event_hour=2026082117/part-00014-71cdb1b8-b141-41a1-b11c-e410d8016fa0.c000.snappy.parquet
+output:
+  dir: data/processed_ts/day0821
+  samples: samples.parquet
+  bins: bins_shards/
+  link_window: link_window.parquet
+  stats: ingest_stats.json
+params:
+  bin_size_m: 10.0
+  window_s: 3600
+  min_td_target_s: 0.1

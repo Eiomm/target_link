@@ -1,5 +1,6 @@
 # --- data: stays on the server, never upload (repo root only) ---
 /data/
+legacy/data/
 *.parquet
 *.npz
 *.snappy

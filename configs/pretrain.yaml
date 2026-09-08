@@ -1,0 +1,30 @@
+# Stage-1 self-supervised pretraining (repV2 §3-§4) — CurveMAE on profile rows.
+data:
+  corpus: data/pretrain_corpus/smoke3.npz   # build_pretrain_corpus.py output
+model:
+  encoder:            # TrajectoryEncoder kwargs — MUST match configs/eta.yaml
+    d_model: 128      # so the pretrained weights load into ETAModel (repV2 §5.4)
+    n_layers: 4
+    n_heads: 4
+    max_bins: 40
+    out_dim: 128
+    v_norm: 33.3
+  dec_layers: 1       # CLS-bottleneck decoder depth
+  n_buckets: 16       # attr label buckets (must match the corpus)
+train:
+  epochs: 8
+  batch_size: 512
+  lr: 3.0e-4
+  weight_decay: 0.01
+  lambda_attr: 0.2    # L = L_rec + lambda * mean_CE(attr heads)
+  mask_span: 3        # contiguous span length (bins)
+  mask_ratio: 0.55    # fraction of valid bins masked per row
+  val_fraction: 0.02  # held-out rows, split at SAMPLE level
+  max_rows_per_epoch: 0   # >0 caps rows/epoch on huge corpora
+  log_every: 1
+overfit:              # wiring sanity: memorise 1000 rows, dropout off, cosine
+  n_rows: 1000
+  epochs: 2000
+  lr: 1.0e-3
+output:
+  dir: runtime/pretrain

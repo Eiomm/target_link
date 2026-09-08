@@ -1,0 +1,49 @@
+data:
+  profiles_npz:
+  - data/processed_ts/day0820/profiles_l200.npz
+  - data/processed_ts/day0821/profiles_l200.npz
+  samples_parquet:
+  - data/processed_ts/day0820/samples.parquet
+  - data/processed_ts/day0821/samples.parquet
+  link_window_parquet:
+  - data/processed_ts/day0820/link_window.parquet
+  - data/processed_ts/day0821/link_window.parquet
+  v_norm: 33.3
+  split:
+    mode: time
+    train:
+    - 2026-08-20 07:00
+    - 2026-08-20 08:00
+    - 2026-08-20 17:00
+    val:
+    - 2026-08-21 07:00
+    test:
+    - 2026-08-21 17:00
+model:
+  hidden: 256
+  depth: 2
+  dropout: 0.1
+  encoder:
+    d_model: 128
+    n_layers: 4
+    n_heads: 4
+    dropout: 0.1
+    out_dim: 128
+  aggregation: cls        # cls = v2 TrajectoryLevelTransformer h_CLS | mean = scatter_mean baseline
+  level2:
+    n_layers: 2
+    n_heads: 4
+    dropout: 0.1
+train:
+  batch_size: 4096
+  epochs: 30
+  lr: 0.001
+  weight_decay: 0.0001
+  log_every: 5
+  max_rows_per_epoch: 2000000
+overfit:
+  n_samples: 2048
+  epochs: 6000
+  lr: 0.005
+output:
+  dir: runtime/eta_ts

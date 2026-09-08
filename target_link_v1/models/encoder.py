@@ -57,6 +57,11 @@ class TrajectoryEncoder(nn.Module):
         )
         self.encoder = nn.TransformerEncoder(layer, num_layers=n_layers)
         self.out_proj = nn.Linear(d_model, out_dim) if out_dim is not None else nn.Identity()
+        # r must enter the downstream at O(1) scale alongside other features:
+        # a fresh Linear projection shrinks r ~7x (per-dim std 1.7 -> 0.24),
+        # which starves the encoder of gradient until the head overfits the
+        # scalar features first. LayerNorm restores the scale for every d.
+        self.feature_norm = nn.LayerNorm(out_dim if out_dim is not None else d_model)
 
     def forward(
         self, speeds: torch.Tensor, valid: torch.Tensor, lengths: torch.Tensor
@@ -81,4 +86,4 @@ class TrajectoryEncoder(nn.Module):
 
         m = valid.float().unsqueeze(-1)
         pooled = (h * m).sum(dim=1) / m.sum(dim=1).clamp(min=1.0)
-        return self.out_proj(pooled)
+        return self.feature_norm(self.out_proj(pooled))

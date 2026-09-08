@@ -10,9 +10,16 @@ only the dynamic block differs:
 
 A1's lift mirrors the encoder input MLP in width, controlling feature
 dimension and nonlinear capacity (spec §11.3). A2 trains the encoder
-end-to-end through the two mean aggregations (spec §8):
+end-to-end through the aggregation chain (v2 md/9_4.md §3, §5):
 
-  r_traj -> mean over K trajs per (sub-link, window) -> mean over subs per sample
+  r_traj -> aggregation over K trajs per (sub-link, window) -> mean over subs
+            per sample
+
+where the (sub-link, window) aggregation is the v2 trajectory-level Transformer
+(aggregation="cls", r_{l,t} = h_CLS — the new default) or the V1 scatter_mean
+(aggregation="mean", kept as the §6 ablation baseline). The second step stays
+a plain mean in both arms: a sample spanning several sub-links still needs its
+h_CLS tokens combined (md/9.4progress §4.3-3).
 """
 from __future__ import annotations
 
@@ -23,6 +30,7 @@ from torch import nn
 
 from target_link_v1.models.aggregation import scatter_mean
 from target_link_v1.models.encoder import TrajectoryEncoder
+from target_link_v1.models.level2 import TrajectoryLevelTransformer
 
 
 class SpeedLift(nn.Module):
@@ -59,17 +67,20 @@ class ETAHead(nn.Module):
 
 def encode_link_rep(
     encoder: TrajectoryEncoder,
+    level2: TrajectoryLevelTransformer | None,
     speeds: torch.Tensor, valid: torch.Tensor, lengths: torch.Tensor,
     prof_group: torch.Tensor, n_groups: int,
     edge_group: torch.Tensor, edge_sample: torch.Tensor, n_samples: int,
 ) -> torch.Tensor:
-    """Profile rows -> per-(sub-link, window) mean -> per-sample subs-mean.
+    """Profile rows -> per-(sub-link, window) r_{l,t} -> per-sample subs-mean.
 
-    Both steps are spec §8 mean aggregations via scatter_mean; the whole path
-    is differentiable back into the encoder.
+    The (sub, window) aggregation is h_CLS when ``level2`` is given (v2
+    default) or scatter_mean when it is None (ablation baseline); the whole
+    path is differentiable back into the encoder either way.
     """
     r = encoder(speeds, valid, lengths)                       # [P, d] per-trajectory
-    r_group = scatter_mean(r, prof_group, n_groups)           # [G, d] (sub, window)
+    r_group = (level2(r, prof_group, n_groups) if level2 is not None
+               else scatter_mean(r, prof_group, n_groups))    # [G, d] (sub, window)
     r_edge = r_group[edge_group]                              # [E, d] group per edge
     return scatter_mean(r_edge, edge_sample, n_samples)       # [B, d] per-sample
 
@@ -78,21 +89,35 @@ class ETAModel(nn.Module):
     """ETA model with switchable dynamic representation (Ablation variants)."""
 
     VARIANTS = ("speed", "speed-mlp", "ours")
+    AGGREGATIONS = ("cls", "mean")
 
     def __init__(
         self,
         variant: str = "speed",
         hidden: int = 256, depth: int = 2, dropout: float = 0.1,
         encoder_kwargs: Dict | None = None,
+        aggregation: str = "cls",
+        level2_kwargs: Dict | None = None,
     ) -> None:
         super().__init__()
         if variant not in self.VARIANTS:
             raise ValueError(f"unknown variant {variant!r}; expected one of {self.VARIANTS}")
         self.variant = variant
+        self.aggregation = None
         if variant == "speed-mlp":
             self.lift = SpeedLift()
         if variant == "ours":
+            if aggregation not in self.AGGREGATIONS:
+                raise ValueError(
+                    f"unknown aggregation {aggregation!r}; expected one of {self.AGGREGATIONS}"
+                )
+            self.aggregation = aggregation
             self.encoder = TrajectoryEncoder(**(encoder_kwargs or {}))
+            if aggregation == "cls":
+                # level-2 width must match the encoder output (out_dim, else d_model)
+                ek = encoder_kwargs or {}
+                d_in = ek.get("out_dim") or ek.get("d_model") or 128
+                self.level2 = TrajectoryLevelTransformer(d_model=d_in, **(level2_kwargs or {}))
         in_dim = {"speed": 2, "speed-mlp": 1 + 128, "ours": 2 + 128}[variant]
         self.head = ETAHead(in_dim, hidden=hidden, depth=depth, dropout=dropout)
 
@@ -107,5 +132,6 @@ class ETAModel(nn.Module):
         else:
             feats.append(v_n.unsqueeze(-1))
         if self.variant == "ours":
-            feats.append(encode_link_rep(self.encoder, **batch))
+            level2 = getattr(self, "level2", None)
+            feats.append(encode_link_rep(self.encoder, level2, **batch))
         return self.head(torch.cat(feats, dim=-1))

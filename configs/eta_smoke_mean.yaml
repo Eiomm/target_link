@@ -1,17 +1,19 @@
-# ETA downstream harness (spec §9) — Stage 1 variants: speed / speed-mlp / ours
+# Smoke A/B: short overfit (1000 ep) comparing speed / ours-mean / ours-cls.
+# Same data & protocol as configs/eta.yaml, only overfit.epochs is cut —
+# quick signal on whether the CLS branch engages vs the mean baseline.
 data:
   profiles_npz: data/processed/profiles_l200.npz
   samples_parquet: data/processed/samples.parquet
   link_window_parquet: data/processed/link_window.parquet
   v_norm: 33.3
-  split: {train: 0.8, val: 0.1, test: 0.1, seed: 0}   # BY LINK (no link spans splits)
+  split: {train: 0.8, val: 0.1, test: 0.1, seed: 0}
 
 model:
   hidden: 256
   depth: 2
   dropout: 0.1
   encoder: {d_model: 128, n_layers: 4, n_heads: 4, dropout: 0.1, out_dim: 128}
-  aggregation: cls        # cls = v2 TrajectoryLevelTransformer h_CLS | mean = scatter_mean baseline
+  aggregation: mean        # cls = v2 TrajectoryLevelTransformer h_CLS | mean = scatter_mean baseline
   level2: {n_layers: 2, n_heads: 4, dropout: 0.1}   # d_model follows encoder out_dim
 
 train:
@@ -21,10 +23,10 @@ train:
   weight_decay: 1.0e-4
   log_every: 5
 
-overfit:            # Step 6 debug subset (wiring sanity, dropout/weight-decay off)
+overfit:
   n_samples: 2048
-  epochs: 6000
-  lr: 5.0e-3          # cosine-decayed to 0 (train_eta.py overfit path)
+  epochs: 1000            # smoke: ~1/6 of the 6000-ep protocol
+  lr: 5.0e-3
 
 output:
-  dir: runtime/eta
+  dir: runtime/eta_smoke

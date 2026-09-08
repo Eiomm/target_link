@@ -1,0 +1,16 @@
+input:
+  files:
+  - data/raw_hdfs/part-00002.parquet
+  - data/raw_hdfs/part-00004.parquet
+  - data/raw_hdfs/part-00011.parquet
+  - data/raw_hdfs/part-00014.parquet
+output:
+  dir: data/processed_4f
+  samples: samples.parquet
+  bins: bins.parquet
+  link_window: link_window.parquet
+  stats: ingest_stats.json
+params:
+  bin_size_m: 10.0
+  window_s: 3600
+  min_td_target_s: 0.1

@@ -9,8 +9,10 @@ The encoder-side structure is the bipartite graph built in Step 5:
   sample -> its (sub-link, window) groups (CSR samp_ptr/samp_groups)
   group  -> its profile rows (group_bounds, group-sorted as spec §8)
 Batches are assembled lazily from sample rows, so every batch contains whole
-groups (spec §8 mean needs all K trajectories together). Splits are BY LINK:
-a link and all its trajectories live in exactly one of train/val/test.
+groups (spec §8 mean needs all K trajectories together). Splits: BY LINK
+(a link and all its trajectories live in exactly one of train/val/test),
+BY TIME (whole hour-windows), or a precomputed "manifest" column written by
+tools/split_random.py (random shuffle at sample/link/window unit).
 """
 from __future__ import annotations
 
@@ -47,7 +49,11 @@ class ETAData:
     link_id: np.ndarray     # [S] str
     window_id: np.ndarray   # [S] i64
     y: np.ndarray           # [S] f32, seconds
+    td_s: np.ndarray        # [S] f32, target traversal time — oracle y≡td floor
     log_y: np.ndarray       # [S] f32
+    z_y: np.ndarray         # [S] f32, log_y z-scored with TRAIN-split stats
+    y_mu: float             # train mean of log_y (inverse transform)
+    y_sd: float             # train std of log_y
     L_m: np.ndarray         # [S] f32, raw link length in metres
     L_n: np.ndarray         # [S] f32, standardised log length
     v_n: np.ndarray         # [S] f32, v_bar / v_norm
@@ -58,6 +64,7 @@ class ETAData:
     # sample -> groups CSR
     samp_ptr: np.ndarray    # [S+1]
     samp_groups: np.ndarray  # [E] global group ids
+    split_mode: str = "link"  # "link" | "time" (links repeat by design) | "manifest" (precomputed)
 
     def rows_of(self, which: int) -> np.ndarray:
         return np.flatnonzero(self.split == which)
@@ -84,7 +91,11 @@ class ETAData:
 
 def build_eta_data(cfg: Dict) -> ETAData:
     """Load profiles + samples + link_window and wire them into an ETAData."""
-    d = np.load(cfg["profiles_npz"])
+    # profiles_npz may be one file or a list (multi-day corpora are concatenated)
+    spec = cfg["profiles_npz"]
+    paths = [spec] if isinstance(spec, str) else list(spec)
+    parts = [np.load(p) for p in paths]
+    d = {k: np.concatenate([x[k] for x in parts]) for k in parts[0].files}
     meta = pd.DataFrame(
         {
             "sample_id": d["sample_id"].astype(str),
@@ -114,18 +125,46 @@ def build_eta_data(cfg: Dict) -> ETAData:
     if samples.mean_speed.isna().any():
         raise ValueError(f"{samples.mean_speed.isna().sum()} samples without link_window row")
 
-    # split by link: permute unique links once, cut 80/10/10
+    # split: mode "link" permutes unique links once and cuts 80/10/10 (a link
+    # lives in exactly one split); mode "time" assigns whole hour-windows by
+    # wall-clock — links intentionally repeat across splits (deployment setup:
+    # train on earlier days, evaluate on later ones).
     sc = cfg["split"]
-    links = samples.target_link_id.unique()
-    rng = np.random.default_rng(int(sc["seed"]))
-    perm = rng.permutation(len(links))
-    n_tr = int(round(float(sc["train"]) * len(links)))
-    n_va = int(round(float(sc["val"]) * len(links)))
-    link_split = np.empty(len(links), dtype=np.int8)
-    link_split[perm[:n_tr]] = 0
-    link_split[perm[n_tr:n_tr + n_va]] = 1
-    link_split[perm[n_tr + n_va:]] = 2
-    split = pd.Series(link_split, index=links).reindex(samples.target_link_id.to_numpy()).to_numpy()
+    split_mode = sc.get("mode", "link")
+    if split_mode == "manifest":
+        # fixed split precomputed & persisted by tools/split_random.py (the
+        # 'split' int8 column on samples_parquet) — random/unit/seed live there
+        if "split" not in samples.columns:
+            raise ValueError("split.mode=manifest requires a 'split' column on samples_parquet")
+        split = samples["split"].to_numpy(dtype=np.int8)
+    elif split_mode == "time":
+        def win_of(s: str) -> int:  # "2026-08-20 07:00" (Beijing) -> window_id
+            return int(pd.Timestamp(s, tz="Asia/Shanghai").timestamp()) // 3600
+
+        win_map = {**{win_of(s): 0 for s in sc["train"]},
+                   **{win_of(s): 1 for s in sc["val"]},
+                   **{win_of(s): 2 for s in sc["test"]}}
+        split = samples.window_id.map(win_map).to_numpy(dtype=np.float64)
+        n_drop = int(np.isnan(split).sum())
+        if n_drop:
+            print(f"[eta_data] time-split: dropping {n_drop:,} samples in "
+                  f"unlisted windows (boundary spillover)")
+            keep = ~np.isnan(split)
+            samples, split = samples[keep].reset_index(drop=True), split[keep].astype(np.int8)
+        else:
+            split = split.astype(np.int8)
+    else:
+        links = samples.target_link_id.unique()
+        rng = np.random.default_rng(int(sc["seed"]))
+        perm = rng.permutation(len(links))
+        n_tr = int(round(float(sc["train"]) * len(links)))
+        n_va = int(round(float(sc["val"]) * len(links)))
+        link_split = np.empty(len(links), dtype=np.int8)
+        link_split[perm[:n_tr]] = 0
+        link_split[perm[n_tr:n_tr + n_va]] = 1
+        link_split[perm[n_tr + n_va:]] = 2
+        split = pd.Series(link_split, index=links).reindex(
+            samples.target_link_id.to_numpy()).to_numpy()
 
     # normalisers computed on the train split only (no val/test leakage)
     log_len = np.log(samples.L_link_m.to_numpy(dtype=np.float64))
@@ -133,11 +172,20 @@ def build_eta_data(cfg: Dict) -> ETAData:
     L_n = ((log_len - mu) / sd).astype(np.float32)
     v_bar = samples.mean_speed.to_numpy(dtype=np.float32)
     y = samples.y_travel_s.to_numpy(dtype=np.float32)
+    # z-scored log target: makes the output layer start at the mean-prediction
+    # point (raw log_y mean ~2.6 burned ~100 steps and stalled the out_dim
+    # arm entirely — see tools/debug_overfit.py)
+    log_y = np.log(y)
+    y_mu = float(log_y[split == 0].mean())
+    y_sd = float(log_y[split == 0].std())
 
     # sample -> groups CSR from the (sample, group) edges of the profile table
     sg = meta.assign(gid=gi.group_idx).drop_duplicates(["sample_id", "gid"])
     row_of = pd.Index(samples.sample_id).get_indexer(sg.sample_id)
-    if (row_of < 0).any() or (np.bincount(row_of, minlength=len(samples)) == 0).any():
+    # time-split may drop boundary samples: their profiles become unreferenced
+    in_set = row_of >= 0
+    sg, row_of = sg[in_set], row_of[in_set]
+    if (np.bincount(row_of, minlength=len(samples)) == 0).any():
         raise ValueError("sample/group join left orphans")
     order2 = np.argsort(row_of, kind="stable")
     samp_groups = sg.gid.to_numpy(dtype=np.int64)[order2]
@@ -150,9 +198,12 @@ def build_eta_data(cfg: Dict) -> ETAData:
         sample_id=samples.sample_id.to_numpy(dtype=object).astype("U"),
         link_id=samples.target_link_id.to_numpy(dtype=object).astype("U"),
         window_id=samples.window_id.to_numpy(dtype=np.int64),
-        y=y, log_y=np.log(y).astype(np.float32),
+        y=y, td_s=samples.td_target.to_numpy(dtype=np.float32),
+        log_y=log_y.astype(np.float32),
+        z_y=((log_y - y_mu) / y_sd).astype(np.float32), y_mu=y_mu, y_sd=y_sd,
         L_m=samples.L_link_m.to_numpy(dtype=np.float32), L_n=L_n,
         v_n=(v_bar / float(cfg["v_norm"])).astype(np.float32), v_bar=v_bar,
         n_trajs_lw=samples.n_trajs.to_numpy(dtype=np.int32),
         split=split.astype(np.int8), samp_ptr=samp_ptr, samp_groups=samp_groups,
+        split_mode=split_mode,
     )
