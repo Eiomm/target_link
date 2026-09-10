@@ -1,0 +1,138 @@
+窗口语料数据格式 (target_link_windows_v2)
+========================================
+生成者: tools/build_windows_spark.py (Spark/YARN)
+样例:   hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link/windows/day20260821_w600_s600/
+写入:   2026-09-09, application_1782979140233_47636758, 48:36
+
+语料级参数 (window_meta.json.d 里的字段)
+----------------------------------------
+format            target_link_windows_v2     读端硬校验, v1 是物理链路级、不可重分组
+anchor_start      1787241600                 锚点区间 [start, end), UTC 秒
+anchor_end        1787328000                 共 144 个锚点 = 24h
+lookback_seconds  600                        W: 窗口回看长度
+stride_seconds    600                        S: 与 W 相等 => 窗口互不重叠, 每个事件只属于一个锚点
+max_bins          21                         单元 200m / bin 10m = 20, +1 给跨界 bin
+max_passes        64                         每物理链路每锚点最多保留的穿越次数
+sub_length_m      200.0                      建模单元长度: sub_id = floor(position_m / 200)
+partitions        800                        repartition(snapshot_id) 的并行度
+snapshot_scope    nonempty_only              (带 --links 时为 road_universe, 含空窗口)
+builder_sha256    35fc96dcf3e83cee…          生成脚本自身的哈希, 用于溯源
+audit             {target_rows: 2154187486, rejected_rows: 55188320}
+
+目录下四个产物
+--------------
+window_curves/          一行 = 一个建模单元 × 一个锚点 × 一条 passage 的曲线   [训练主表]
+snapshots/              一行 = 一个建模单元 × 一个锚点 (含空窗口)              [训练读]
+window_members/         曲线聚合前的逐 bin 扁平成员表, 150 GB                  [不读, 只审计]
+window_meta.json.d/     整份语料的契约, 单行 JSON                              [强制]
+
+文件布局契约 (读端会断言)
+-------------------------
+* 文件名 part-*.parquet, 每文件约 25.2 万行 / 199 MB, 共 800 个。
+* repartition(800, "snapshot_id") + sortWithinPartitions  =>  文件内按 snapshot_id 有序,
+  且一个 snapshot 绝不跨输出文件。
+* snapshot_id 是哈希, 所以任意文件子集都同时含 train 和 val 的 anchor ——
+  多 worker 各取互斥文件子集不会破坏 split。
+
+
+window_curves 一行
+------------------
+唯一键: (map_version, target_link_id, sub_id, anchor_ts, sample_id)
+snapshot_id = sha2(to_json(struct(map_version, target_link_id, anchor_ts, sub_id)), 256)
+            => 建模单元级身份, 不是物理链路级。同一 snapshot_id 的多行 =
+               同一个单元同一锚点下的多条 passage (不同 sample_id)。
+
+标量列:
+  snapshot_id            string    建模单元级身份 (哈希)
+  map_version            string    路网版本, 如 2026082012 = 8/20 12:00 版本
+  target_link_id         string    物理链路 id, 如 6165130
+  anchor_ts              int64     锚点, UTC 秒, 如 1787251200 = 北京 08-21 10:00
+  sub_id                 int32     该链路第几个建模单元 (0 起)
+  sample_id              string    一次穿越/一趟车, 如 13341939637188998500#6165130#001#2026082102
+  link_length_m          double    物理链路长度, 如 375.0
+  unit_start_m           double    本单元在链路内的起点, sub_id * 200
+  unit_length_m          double    本单元长度, min(200, link_length_m - unit_start_m)
+  length                 int32     本曲线 bin 数
+  available_distance_m   double    本曲线累计可用距离 (aggregate(bins, +distance_m))
+
+核心变长列 bins: array<struct>
+  按 position_m 排序; 只含落在窗口内的那一段, 不是整条链路。
+  position_m      double  单元内起点, 0, 10, 20, …, 190
+  bin_idx         int64   原链路的 bin 序号 (窗口切了空间但没改上游编号, 如 10..29)
+  duration        double  该 bin 的通行时长 (秒)
+  distance_m      double  该 bin 的距离 (米)
+  observed        int32   0 = 由上游补齐/插值, 1 = 有真实观测
+  event_id        string  该 bin 事件的哈希 (map_version,target_link_id,sample_id,bin_idx)
+  bin_start_ts    double  UTC 秒
+  bin_end_ts      double  UTC 秒
+  available_ts    double  UTC 秒, 这条观测"何时才知道" —— 因果性的关键列
+
+实拍一行 (window_curves/part-00000, 第 1 行):
+  snapshot_id           00025802d5cd669a5eae5e75f7e5ad171bef0edad63ea74f46329578293aba44
+  map_version           2026082012
+  target_link_id        6165130
+  anchor_ts             1787251200
+  sub_id                0
+  sample_id             13341939637188998500#6165130#001#2026082102
+  link_length_m         375.0
+  unit_start_m          0.0
+  unit_length_m         200.0
+  length                20
+  available_distance_m  200.0
+  bins[0]  {position_m 0.0,   bin_idx 10, duration 0.6389999389648438,
+            distance_m 10.0, observed 0, event_id 4ab9fdebf6ab8d92…,
+            bin_start_ts 1787250722.3652954, bin_end_ts 1787250723.0042953,
+            available_ts 1787250724.3362954}
+  bins[1]  {position_m 10.0,  bin_idx 11, duration 0.6389999389648438, …}
+  bins[2]  {position_m 20.0,  bin_idx 12, duration 0.693000078201294, observed 1, …}
+  bins[19] {position_m 190.0, bin_idx 29, duration 0.7769999504089355,
+            distance_m 10.0, observed 0, event_id 2c0f01802907ff19…,
+            bin_start_ts 1787250736.7772954, bin_end_ts 1787250737.5542953,
+            available_ts 1787250739.1132953}
+
+因果契约 (读端 target_link_v1/data/window_stream.py:62-63 硬断言, 违反即 raise)
+------------------------------------------------------------------------------
+   bin_start_ts >= anchor - lookback_seconds (600)
+   bin_end_ts   <  anchor
+   available_ts <= anchor
+
+上例: 末 bin 结束 1787250737.55, 可用 1787250739.11, 锚点 1787251200 —— 全部在窗口内。
+另: duration > 0 且 distance_m > 0 (否则是无效重建目标)。
+
+读端把它变成什么 (WindowDataset._pack)
+--------------------------------------
+变长 bins 铺成定长矩阵, batch 内形状 [总曲线数, max_bins=21]:
+  duration / distance / position / observed   原值
+  age      = floor((anchor - bin_end_ts) / 60) * 60 / lookback_seconds
+             => 粗化到 60s 桶再归一; 精确时间不进模型
+  valid    bool mask, lengths  变长对齐
+  curve_pass / curve_group    把同一 passage 的多条曲线、同一 snapshot 的多条 passage
+                              串回组, 在 collate_windows 里做偏移拼接
+  每个 worker 对文件列表取同一随机排列的互斥子集 (window_stream.py:85);
+  一个 snapshot 超过 max_curves_per_snapshot (512) 报错, 不静默截断。
+
+
+另外两张表
+----------
+snapshots/ 一行 = 一个 (map_version, target_link_id, anchor_ts, sub_id)
+  n_bin_observations, distance_observations_m, distance_over_time_speed,
+  link_length_m, unit_start_m, unit_length_m,
+  n_passes_before_cap, n_passes_kept   (通行数上限的审计, 计数按物理链路)
+  empty_flag (= n_passes_kept == 0), snapshot_id, lookback_seconds
+  => 单元级索引, 回答"这一格有没有车、被 cap 掉了多少"
+
+window_members/ 一行 = 一个 (snapshot_id, sample_id, bin_idx)
+  曲线聚合前的逐 bin 明细, 150 GB, 训练不读, 只用于回溯/审计。
+
+
+本地残片说明
+------------
+data/windows_day20260821/.tmp_window_curves/ 是 9/9 那次中断拉取的残留
+(hdfs dfs -get 先写 .tmp_ 再 mv, 被杀时停在 .tmp 阶段, 未污染正式路径)。
+它只有 window_curves 一张表、没有 meta, 所以不能单独当语料喂 WindowDataset
+(会因缺 window_meta.json.d 报错); 可当格式样本直接读:
+
+  python -c "
+  import pyarrow.parquet as pq
+  p='data/windows_day20260821/.tmp_window_curves/part-00000-63be2221-9d42-45e2-a9bd-164bc52950f8-c000.snappy.parquet'
+  pf=pq.ParquetFile(p); print(pf.schema_arrow); print(pf.read_row_group(0).slice(0,1).to_pylist())"
