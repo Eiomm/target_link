@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Submit tools/stats_week_links.py — 7-day link/traj census over beijing_week_biz
+# Submit legacy/tools/stats_week_links.py — 7-day link/traj census over beijing_week_biz
 # raw table. Three tiers, same env/pattern as submit_curves_yarn.sh.
 #
 #   MODE=local  single-hour run on this pod (data/raw_hdfs/...)
@@ -7,11 +7,10 @@
 #   MODE=yarn   real submission over the full 7 days (default)
 #
 #   OUT_DIR=hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link/week_stats/7d \
-#   MODE=yarn bash scripts/submit_week_stats_yarn.sh
+#   MODE=yarn bash legacy/scripts/submit_week_stats_yarn.sh
 set -euo pipefail
 
-# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
-# rest of the code stayed in place (legacy/README.md)
+# legacy/scripts/ -> repo root; implementation is also archived (legacy/README.md)
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 
@@ -41,7 +40,7 @@ case "$MODE" in
   local)
     : "${DAY:?DAY required for local run}"
     exec env -u SPARK_HOME SPARK_LOCAL_DIRS="$SPARK_LOCAL_DIRS" \
-        PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" tools/stats_week_links.py \
+        PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" legacy/tools/stats_week_links.py \
         --inputs "data/raw_hdfs/event_hour=${DAY}*/part-*.parquet" \
         --out "${OUT_DIR:-data/_stats/week_local}" \
         --master 'local[8]' --driver-memory 6g --shuffle-partitions 64
@@ -67,7 +66,7 @@ case "$MODE" in
       --conf "spark.dynamicAllocation.minExecutors=${MIN_EXECUTORS}"
       --conf "spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
       --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer"
-      tools/stats_week_links.py
+      legacy/tools/stats_week_links.py
       --inputs "$INPUT_GLOB"
       --out "$OUT_DIR"
       --master yarn

@@ -21,7 +21,7 @@ def main():
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    repo = Path(__file__).resolve().parents[1]
+    repo = Path(__file__).resolve().parents[2]
     root = Path(a.out).resolve()
     root.mkdir(parents=True, exist_ok=False)
     rows = []
@@ -46,7 +46,7 @@ def main():
     env.setdefault("SPARK_LOCAL_IP", "127.0.0.1")
 
     def run(script, *args):
-        subprocess.run([sys.executable, str(repo / "tools" / script), *map(str, args)],
+        subprocess.run([sys.executable, str(repo / "legacy" / "tools" / script), *map(str, args)],
                        cwd=repo, env=env, check=True)
 
     run("build_windows_spark.py", "--inputs", root / "events.parquet", "--out", root / "corpus",

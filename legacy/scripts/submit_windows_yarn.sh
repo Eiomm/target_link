@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # New causal-window pipeline. MODE=dry prints only; no DAY requirement.
 set -euo pipefail
-# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
-# rest of the code stayed in place (legacy/README.md)
+# legacy/scripts/ -> repo root; implementation is also archived (legacy/README.md)
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 MODE="${MODE:-dry}"
@@ -10,7 +9,7 @@ MODE="${MODE:-dry}"
 : "${OUT_DIR:?new output version directory required}"
 : "${ANCHOR_START:?inclusive UTC epoch seconds required}"
 : "${ANCHOR_END:?exclusive UTC epoch seconds required}"
-args=(tools/build_windows_spark.py --inputs "$INPUT_GLOB" --out "$OUT_DIR"
+args=(legacy/tools/build_windows_spark.py --inputs "$INPUT_GLOB" --out "$OUT_DIR"
   --anchor-start "$ANCHOR_START" --anchor-end "$ANCHOR_END"
   --lookback-seconds "${LOOKBACK_SECONDS:-600}" --stride-seconds "${STRIDE_SECONDS:-600}"
   --max-passes "${MAX_PASSES:-0}" --seed "${CAP_SEED:-42}"

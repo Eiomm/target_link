@@ -13,8 +13,8 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # --- 数据:拿一部分,不动全量 -------------------------------------------------
-# bucket = 当日第几个 10min window(128 个/天);train 取 4 个连续 window,
-# val 取次日同一钟点 —— 换一天同一个早上,比同一天的尾巴更像真的泛化检查
+# bucket = xxhash64(cell_id) % 128 的存储分桶，不是 10min window；每个 bucket
+# 都混有当天多个 window。train 取 4 个 hash bucket，val 取次日相同 hash bucket。
 export TRAIN_PARTS="20260821:64 20260821:65 20260821:66 20260821:67"
 export VAL_PARTS="20260822:64"
 export DATA="$REPO/runtime/cell_smoke_20260821_64_67"

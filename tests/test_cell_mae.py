@@ -149,10 +149,20 @@ def test_bin_valid_is_a_real_input_channel(model):
                               ob["trajectory_state"][:, 3])
 
 
-def test_ablation_actually_disables_the_aggregate(model):
+def test_aggregate_ablation_equals_both_individual_ablations(model):
     a = make_batch()
-    on, off = model(a), model(a, ablate_aggregate=True)
+    on = model(a)
+    no_cls = model(a, ablate_cls=True)
+    no_group_bins = model(a, ablate_group_bins=True)
+    off = model(a, ablate_aggregate=True)
+    off_explicit = model(a, ablate_cls=True, ablate_group_bins=True)
+
+    # Each switch changes the prediction, and the legacy aggregate switch is
+    # exactly equivalent to turning both independently named channels off.
+    assert not torch.allclose(on["prediction"], no_cls["prediction"])
+    assert not torch.allclose(on["prediction"], no_group_bins["prediction"])
     assert not torch.allclose(on["prediction"], off["prediction"])
+    assert torch.allclose(off["prediction"], off_explicit["prediction"])
     assert torch.isfinite(off["prediction"]).all()
 
 

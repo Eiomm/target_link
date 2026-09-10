@@ -1,8 +1,8 @@
 """Train the stage-1 self-supervised CurveMAE (repV2 §4.1).
 
 Usage:
-  python tools/train_pretrain.py --config legacy/configs/pretrain.yaml --overfit  # wiring
-  python tools/train_pretrain.py --config legacy/configs/pretrain.yaml --seeds 0  # real run
+  python legacy/tools/train_pretrain.py --config legacy/configs/pretrain.yaml --overfit  # wiring
+  python legacy/tools/train_pretrain.py --config legacy/configs/pretrain.yaml --seeds 0  # real run
 
 Monitoring per log interval (repV2 §4.1, all three must move):
   - val L_rec (fresh masks) + train loss;
@@ -29,8 +29,8 @@ from typing import Dict
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from target_link_v1.models.pretrain import CurveMAE, span_mask  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from legacy.target_link_v1.models.pretrain import CurveMAE, span_mask  # noqa: E402
 from target_link_v1.utils import dump_json, load_config, seed_everything  # noqa: E402
 
 ATTR_KEYS = ("y", "v", "len", "hour")
@@ -57,9 +57,9 @@ def run(cfg: Dict, seed: int, overfit: bool, device: str) -> Dict:
     if stream:
         import glob as globmod
         import pyarrow.parquet as pq
-        from target_link_v1.data.pretrain_stream import (CurveShardDataset,
-                                                         stream_batch_to_tensors,
-                                                         time_cutoff)
+        from legacy.target_link_v1.data.pretrain_stream import (CurveShardDataset,
+                                                                stream_batch_to_tensors,
+                                                                time_cutoff)
         shards_dir = cfg["data"]["shards"]
         files = sorted(globmod.glob(f"{shards_dir}/curves/part-*.parquet"))
         if not files:

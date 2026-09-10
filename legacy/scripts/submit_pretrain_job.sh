@@ -4,7 +4,7 @@
 # produced upstream by build_profiles -> build_pretrain_corpus and lives on NFS).
 #
 # Platform form (Web 训练任务 -> 创建单机任务 / luban-client):
-#   启动命令: bash /nfs/dataset-ofs-494-1/project/user/junao/target_link/scripts/submit_pretrain_job.sh
+#   启动命令: bash /nfs/dataset-ofs-494-1/project/user/junao/target_link/legacy/scripts/submit_pretrain_job.sh
 #   资源:     1×GPU 单机 (model is 1.1M params; no accelerate/multi-GPU needed)
 #   镜像:     本实验环境快照或任意 CUDA<=11.4 基础镜像 — the python env is the
 #             NFS conda qwen12 (torch verified on 470.129.06 driver machines by RPGPT)
@@ -15,7 +15,7 @@ set -euo pipefail
 
 REPO="/nfs/dataset-ofs-494-1/project/user/junao/target_link"
 ENV_ROOT="${ENV_ROOT:-/nfs/dataset-ofs-494-1/project/user/junao/ruiqian/qwen12}"
-CONFIG="${CONFIG:-$REPO/configs/pretrain.yaml}"
+CONFIG="${CONFIG:-$REPO/legacy/configs/pretrain.yaml}"
 CORPUS="${CORPUS:-}"          # default: read from the yaml
 SEEDS="${SEEDS:-0}"
 DRY_RUN="${DRY_RUN:-0}"
@@ -48,5 +48,5 @@ fi
 extra=()
 [[ -n "$CORPUS" ]] && extra+=(--corpus "$CORPUS")
 echo "Launching stage-1 pretraining..."
-exec "$PYTHON" -u tools/train_pretrain.py --config "$CONFIG" --seeds "$SEEDS" \
+exec "$PYTHON" -u legacy/tools/train_pretrain.py --config "$CONFIG" --seeds "$SEEDS" \
      "${extra[@]}" ${EXTRA:-}

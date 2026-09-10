@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Submit tools/build_curves_spark.py (v2.1 merged pipeline: raw -> curve shards
+# Submit legacy/tools/build_curves_spark.py (v2.1 merged pipeline: raw -> curve shards
 # in ONE pure-SQL job — no executor python needed, minipy3 is enough).
 # Three tiers, same pattern/env as scripts/submit_ingest_yarn.sh.
 #
@@ -8,18 +8,17 @@
 #   MODE=yarn   real submission (default)
 #
 #   OUT_DIR=hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link/curves_spark/day20260817 \
-#   DAY=20260817 MODE=yarn bash scripts/submit_curves_yarn.sh
+#   DAY=20260817 MODE=yarn bash legacy/scripts/submit_curves_yarn.sh
 #
 #   WEEK capped run (ONE job over 7 days, per-link cap N): set INPUT_GLOB to the
 #   comma-separated day globs (build_curves_spark splits on comma) so edges/meta
 #   are computed once over the whole corpus:
 #   OUT_DIR=.../curves_spark/week_cap10 MAX_TRAJS_PER_LINK=10 \
 #     INPUT_GLOB='.../beijing_week_biz/samples/event_hour=2026081[7-9]*/part-*.parquet,.../beijing_week_biz/samples/event_hour=2026082[0-3]*/part-*.parquet' \
-#     MODE=yarn bash scripts/submit_curves_yarn.sh
+#     MODE=yarn bash legacy/scripts/submit_curves_yarn.sh
 set -euo pipefail
 
-# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
-# rest of the code stayed in place (legacy/README.md)
+# legacy/scripts/ -> repo root; implementation is also archived (legacy/README.md)
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 
@@ -57,7 +56,7 @@ suffix=""
 case "$MODE" in
   local)
     exec env -u SPARK_HOME SPARK_LOCAL_DIRS="$SPARK_LOCAL_DIRS" \
-        PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" tools/build_curves_spark.py \
+        PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" legacy/tools/build_curves_spark.py \
         --inputs "data/raw_hdfs/event_hour=${DAY}${HOURS}/part-*.parquet" \
         --out "${OUT_DIR:-data/curves_spark/day${DAY}${HOURS}${suffix}}" \
         --master 'local[8]' --driver-memory 6g \
@@ -86,7 +85,7 @@ case "$MODE" in
       --conf "spark.dynamicAllocation.minExecutors=${MIN_EXECUTORS}"
       --conf "spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
       --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer"
-      tools/build_curves_spark.py
+      legacy/tools/build_curves_spark.py
       --inputs "$INPUT_GLOB"
       --out "$OUT_DIR"
       --master yarn

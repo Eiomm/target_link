@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build the 24h causal-window corpus on YARN (Beijing 2026-08-21, W=600/S=600).
 #
-#   MODE=yarn bash scripts/submit_windows_24h.sh   # submit
-#   MODE=dry  bash scripts/submit_windows_24h.sh   # print the spark-submit only
+#   MODE=yarn bash legacy/scripts/submit_windows_24h.sh   # submit
+#   MODE=dry  bash legacy/scripts/submit_windows_24h.sh   # print the spark-submit only
 #
 # Every knob is exported with a default here, so the script runs with no
 # external environment; it only sets the 24h parameters and hands over to
@@ -13,7 +13,7 @@
 # (25h = warm-up hour 2026082023 + the 24 partitions of 20260821).
 #
 # Anchors [1787241600, 1787328000) = 144 windows, 600s aligned, disjoint.
-# Train/val split for tools/train_windows.py (train_end/val_start/val_end):
+# Train/val split for legacy/tools/train_windows.py (train_end/val_start/val_end):
 #   train 96 anchors = [1787241600, 1787299200)
 #   val   48 anchors = [1787299800, 1787328000)
 # The 600s gap equals W, so no window is shared across the split.
@@ -26,8 +26,7 @@
 # is auditable: the snapshots table carries n_passes_before_cap / n_passes_kept
 # per link and anchor. Set MAX_PASSES=0 to keep every pass.
 set -euo pipefail
-# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
-# rest of the code stayed in place (legacy/README.md)
+# legacy/scripts/ -> repo root; implementation is also archived (legacy/README.md)
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"  # sibling entrypoints moved here too
 cd "$REPO"

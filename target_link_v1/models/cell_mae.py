@@ -19,7 +19,8 @@ Choices worth naming, because they are what the smoke is meant to exercise:
   * The decoder reads h_CLS and a per-bin mean of visible trajectories' level-1
     states, never the target trajectory's own state. This preserves spatial
     congestion information that was previously destroyed by trajectory pooling.
-    `ablate_aggregate=True` zeroes both group channels as a branch-death monitor.
+    Validation can ablate the global and per-bin channels independently;
+    `ablate_aggregate=True` remains the backward-compatible all-off probe.
   * T_diff stays in seconds. It is never converted to speed -- on a fixed-length
     bin the crossing time already is the motion feature.
   * The feature axis remains exactly (T_diff, ratio, observed). `bin_valid` is
@@ -112,7 +113,8 @@ class CellMAE(nn.Module):
                                      nn.Linear(d_model, d_model), nn.GELU(),
                                      nn.Linear(d_model, 1))
 
-    def forward(self, batch, ablate_aggregate=False):
+    def forward(self, batch, ablate_aggregate=False, ablate_cls=False,
+                ablate_group_bins=False):
         """batch: the dict `collate_cells` returns, already on the model's device.
 
         Returns `representation` h_CLS [B, d], `group_bin_state` [B, n_bins, d],
@@ -154,8 +156,9 @@ class CellMAE(nn.Module):
         group_bins = group_bins * group_bin_valid.unsqueeze(-1).to(group_bins.dtype)
 
         base = h_cls.unsqueeze(1).expand(B, M, -1)
-        if ablate_aggregate:
+        if ablate_aggregate or ablate_cls:
             base = torch.zeros_like(base)
+        if ablate_aggregate or ablate_group_bins:
             group_bins = torch.zeros_like(group_bins)
         pos = self.dec_pos_emb(torch.arange(n, device=x.device))
         query = self.dec_query(torch.cat([pos.unsqueeze(0).expand(P, -1, -1),

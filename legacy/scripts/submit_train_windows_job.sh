@@ -2,7 +2,7 @@
 # Luban k8s-job entrypoint for the v1 window MAE (GPU). Pattern: submit_pretrain_job.sh.
 #
 # Platform form (Web 训练任务 -> 创建单机任务 / luban-client):
-#   启动命令: bash /nfs/dataset-ofs-494-1/project/user/junao/target_link/scripts/submit_train_windows_job.sh
+#   启动命令: bash /nfs/dataset-ofs-494-1/project/user/junao/target_link/legacy/scripts/submit_train_windows_job.sh
 #   资源:     1×GPU 单机 (选 A100)。模型很小(d_model=128/2 层),显存不是瓶颈,
 #             A100 的价值在吞吐和 fp32/tf32 的稳定;batch_size 可以往上调。
 #   镜像:     本实验环境快照(需含 hadoop 客户端 — 首次要把语料从 HDFS 拉到 NFS)
@@ -26,7 +26,7 @@ HDFS_BASE="${HDFS_BASE:-hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_li
 HDFS_CORPUS="${HDFS_CORPUS:-$HDFS_BASE/windows/day${DAY}_w600_s600}"
 DATA="${DATA:-$REPO/data/windows_day${DAY}}"
 OUT="${OUT:-$REPO/runtime/windows_train_day${DAY}_$(date +%m%d_%H%M)}"
-CONFIG="${CONFIG:-$REPO/configs/pretrain_windows.yaml}"
+CONFIG="${CONFIG:-$REPO/legacy/configs/pretrain_windows.yaml}"
 FETCH="${FETCH:-1}"            # 0 = 完全不碰 HDFS,语料必须已在 $DATA
 FORCE_FETCH="${FORCE_FETCH:-0}"  # 1 = 即使本地有也重拉
 DRY_RUN="${DRY_RUN:-0}"
@@ -131,7 +131,7 @@ fi
 
 # --- train ----------------------------------------------------------------
 echo "Launching window MAE training..."
-exec "$PYTHON" -u tools/train_windows.py --config "$CONFIG" \
+exec "$PYTHON" -u legacy/tools/train_windows.py --config "$CONFIG" \
   --data "$DATA" --out "$OUT" \
   --train-end "$TRAIN_END" --val-start "$VAL_START" --val-end "$VAL_END" \
   --epochs "$EPOCHS" --max-batches "$MAX_BATCHES" --batch-size "$BATCH_SIZE" \

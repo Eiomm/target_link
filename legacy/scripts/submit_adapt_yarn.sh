@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Adapt raw corridor samples -> causal events (tools/adapt_samples_windows.py).
+# Adapt raw corridor samples -> causal events (legacy/tools/adapt_samples_windows.py).
 #
 #   MODE=yarn   submit to the company cluster (default)
 #   MODE=dry    print the spark-submit command only
@@ -20,8 +20,7 @@
 # parts, so 25h is ~4.5e9 events. The v4 smoke (2 parts) produced 22.7M events
 # / 511 MB, i.e. ~23 B/row -> this run writes roughly 95-100 GB.
 set -euo pipefail
-# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
-# rest of the code stayed in place (legacy/README.md)
+# legacy/scripts/ -> repo root; implementation is also archived (legacy/README.md)
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 
@@ -62,7 +61,7 @@ case "$MODE" in
     exec env -u SPARK_HOME SPARK_LOCAL_DIRS="$SPARK_LOCAL_DIRS" \
         PYSPARK_PYTHON="$QWEN12_PY" \
         PYSPARK_SUBMIT_ARGS="--driver-memory ${LOCAL_DRIVER_MEMORY:-6g} pyspark-shell" \
-        "$QWEN12_PY" tools/adapt_samples_windows.py \
+        "$QWEN12_PY" legacy/tools/adapt_samples_windows.py \
         --inputs "${LOCAL_INPUTS:-data/raw_hdfs/event_hour=${WARMUP_HOUR}/part-*.parquet,data/raw_hdfs/event_hour=${DAY}*/part-*.parquet}" \
         --out "${LOCAL_OUT:-data/windows_adapt_0909/events_${DAY}}" \
         --master "${LOCAL_MASTER:-local[4]}" \
@@ -89,7 +88,7 @@ case "$MODE" in
       --conf "spark.dynamicAllocation.minExecutors=${MIN_EXECUTORS}"
       --conf "spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
       --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer"
-      tools/adapt_samples_windows.py
+      legacy/tools/adapt_samples_windows.py
       --inputs "$INPUTS"
       --out "$OUT"
       --master yarn

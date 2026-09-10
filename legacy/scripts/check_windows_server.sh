@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Use the server's existing environment. No install, overwrite, or YARN submit.
 set -euo pipefail
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 
 # Python: explicit PYTHON wins; else the pod's qwen12 env if present (it has
@@ -85,5 +85,5 @@ if [ -z "${SPARK_LOCAL_DIRS:-}" ]; then
     [ -d "$d" ] && export SPARK_LOCAL_DIRS="$d" && break
   done
 fi
-"$PYTHON" -m pytest tests/test_windows.py -q
-"$PYTHON" tools/smoke_windows.py --out "$SMOKE_OUT"
+"$PYTHON" -m pytest legacy/tests/test_windows.py -q
+"$PYTHON" legacy/tools/smoke_windows.py --out "$SMOKE_OUT"

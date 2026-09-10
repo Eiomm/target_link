@@ -13,7 +13,7 @@ Real profiles:
      of the §6 ablation must be wired); the mean arm must equal the old
      two-step scatter_mean exactly (baseline intact)
 
-Usage: python tools/smoke_level2.py
+Usage: python legacy/tools/smoke_level2.py
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from target_link_v1.data import build_group_index, group_aligned_chunks, sort_by_group  # noqa: E402
 from target_link_v1.models import (  # noqa: E402
     ETAModel, TrajectoryEncoder, TrajectoryLevelTransformer, encode_link_rep,

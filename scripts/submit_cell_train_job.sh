@@ -30,8 +30,8 @@ HDFS_CORPUS="${HDFS_CORPUS:-$HDFS_BASE/corpus_v1}"
 OBS_DIR="${OBS_DIR:-observations_v2}"
 GROUPS_DIR="${GROUPS_DIR:-training_groups_k3}"
 
-# train = 2026-08-21 的 4 个连续 10min window(bucket = 当日第几个 window)
-# val   = 次日同一个钟点窗口:同一条路上的另一个早上,而不是同一天的尾巴
+# bucket 是 xxhash64(cell_id) % 128 的存储分桶，不是时间窗口。默认 train 取
+# 2026-08-21 的 4 个 hash bucket，val 取次日相同 bucket；每个 bucket 含多个 window。
 TRAIN_PARTS="${TRAIN_PARTS:-20260821:64 20260821:65 20260821:66 20260821:67}"
 VAL_PARTS="${VAL_PARTS:-20260822:64}"
 

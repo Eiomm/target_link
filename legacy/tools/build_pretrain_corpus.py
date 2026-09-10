@@ -18,7 +18,7 @@ masked positions attend with v=0,m=0 — see models/encoder.py docstring); the
 corpus only carries valid/observed so the trainer masks valid positions only.
 
 Run:
-  python tools/build_pretrain_corpus.py \
+  python legacy/tools/build_pretrain_corpus.py \
       --inputs data/processed_day20260820/profiles_l200.npz ... \
       --out data/pretrain_corpus/corpus.npz --per-day-cap 5000000
 """

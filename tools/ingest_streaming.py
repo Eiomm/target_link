@@ -8,7 +8,7 @@ samples (one row per trajectory-pass) and link_window ((link,window) mean_speed)
 are small enough to accumulate in memory; bins (the long 10m-bin table) are the
 memory killer — each file's bins go straight to data/processed_h3/bins_shards/.
 
-Usage: python tools/ingest_streaming.py --config configs/ingest_ts_day0821.yaml
+Usage: python tools/ingest_streaming.py --config legacy/configs/ingest_ts_day0821.yaml
 """
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def process_file(path: Path, window_s: int) -> tuple[pd.DataFrame, pd.DataFrame]
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="configs/ingest_ts_day0821.yaml")
+    parser.add_argument("--config", default="legacy/configs/ingest_ts_day0821.yaml")
     args = parser.parse_args()
     cfg = load_config(args.config)
 

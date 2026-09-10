@@ -126,7 +126,7 @@ class CellCorpusDataset(IterableDataset):
     def __init__(self, directory, obs_dir="observations_v2",
                  groups_dir="training_groups_k3", days=None, seed=0, epoch=0,
                  shuffle_groups=True, max_groups=None, m_max=M_MAX,
-                 n_bins=N_BINS):
+                 n_bins=N_BINS, groups_per_partition=None):
         super().__init__()
         self.obs = _Store("%s/%s" % (str(directory).rstrip("/"), obs_dir))
         self.grp = _Store("%s/%s" % (str(directory).rstrip("/"), groups_dir))
@@ -144,7 +144,10 @@ class CellCorpusDataset(IterableDataset):
         self.seed, self.epoch = int(seed), int(epoch)
         self.shuffle_groups = bool(shuffle_groups)
         self.max_groups = max_groups
+        self.groups_per_partition = groups_per_partition
         self.m_max, self.n_bins = int(m_max), int(n_bins)
+        if self.groups_per_partition is not None and self.groups_per_partition <= 0:
+            raise ValueError("groups_per_partition must be positive or None")
 
     def set_epoch(self, epoch):
         """Reseed the group shuffle and the MAE mask; call once per epoch."""
@@ -264,6 +267,8 @@ class CellCorpusDataset(IterableDataset):
             idx = np.arange(L["n_groups"])
             if self.shuffle_groups:
                 idx = np.random.default_rng([self.seed, self.epoch, int(pi)]).permutation(idx)
+            if self.groups_per_partition is not None:
+                idx = idx[:self.groups_per_partition]
             for gi in idx:
                 yield self._pack(day, bucket, L, int(gi))
                 seen += 1

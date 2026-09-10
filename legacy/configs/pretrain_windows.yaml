@@ -1,4 +1,4 @@
-# Flat config for tools/train_windows.py; CLI flags override these values.
+# Flat config for legacy/tools/train_windows.py; CLI flags override these values.
 # Fill actual epoch-second boundaries before production training.
 data: data/windows_v1
 out: runtime/pretrain_windows_v1

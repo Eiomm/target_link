@@ -7,14 +7,14 @@ import random
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from target_link_v1.data.window_stream import WindowDataset, collate_windows
-from target_link_v1.models.window_mae import WindowMAE, reconstruction_mask, reconstruction_loss
+from legacy.target_link_v1.data.window_stream import WindowDataset, collate_windows
+from legacy.target_link_v1.models.window_mae import WindowMAE, reconstruction_mask, reconstruction_loss
 
 
 def main():

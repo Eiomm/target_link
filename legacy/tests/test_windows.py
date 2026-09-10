@@ -7,11 +7,12 @@ import pytest
 import torch
 from pyspark.sql import SparkSession
 
-from tools.build_windows_spark import (prepare_events, window_members, build_curves,
-                                       snapshots, validate_args, parser, FORMAT)
-from tools.adapt_samples_windows import adapt
-from target_link_v1.data.window_stream import WindowDataset, collate_windows
-from target_link_v1.models.window_mae import WindowMAE, reconstruction_mask, reconstruction_loss
+from legacy.tools.build_windows_spark import (prepare_events, window_members, build_curves,
+                                              snapshots, validate_args, parser, FORMAT)
+from legacy.tools.adapt_samples_windows import adapt
+from legacy.target_link_v1.data.window_stream import WindowDataset, collate_windows
+from legacy.target_link_v1.models.window_mae import (WindowMAE, reconstruction_mask,
+                                                      reconstruction_loss)
 
 
 @pytest.fixture(scope="module")

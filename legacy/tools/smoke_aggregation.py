@@ -5,7 +5,7 @@ K=1 identity, gradient flow encoder <- scatter_mean, and grouping-key sanity —
 for single-sub links the aggregated sub-level mean speed must track the
 production link_window.mean_speed.
 
-Usage: python tools/smoke_aggregation.py
+Usage: python legacy/tools/smoke_aggregation.py
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from target_link_v1.data import build_group_index, group_aligned_chunks, sort_by_group  # noqa: E402
 from target_link_v1.models import LinkAggregator, TrajectoryEncoder, scatter_mean  # noqa: E402
 from target_link_v1.utils import seed_everything  # noqa: E402

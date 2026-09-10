@@ -25,7 +25,8 @@
 
 - `9_4.md`：早期 200m trajectory representation v2 设计。
 - `数据处理过程.md`：早期 ingest + 200m spatial profile 流程。
-- `窗口管线使用.md`、`窗口语料数据格式.txt`：已归档 causal-window 管线。
+- `窗口管线使用.md`、`窗口语料数据格式.txt`：已归档 causal-window 管线；实现位于
+  `legacy/tools/`、`legacy/target_link_v1/` 与 `legacy/tests/`。
 - `目标组件两文件审计.md`：9.9 两个本地数据文件的 ratio/边界审计。
 
 新合入的旧方案与原始样本已放到 `legacy/md/`，避免与当前规范混淆，同时保留追溯信息。

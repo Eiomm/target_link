@@ -2,7 +2,7 @@
 
 Counts at PASS level (a "pass" = one (traj_id, target_link_id), i.e. one vehicle
 crossing one target link once) using seg_mark==1 rows only — the same row
-semantics tools/build_curves_spark.py filters on. Pure Spark SQL, no executor
+semantics legacy/tools/build_curves_spark.py filters on. Pure Spark SQL, no executor
 python (minipy3 is enough).
 
 Outputs to <out>/:
@@ -12,7 +12,7 @@ Outputs to <out>/:
   summary.json.d       overall distinct links / trajs / passes + day table
 
 Run local (one hour):
-  env -u SPARK_HOME ... python tools/stats_week_links.py \
+  env -u SPARK_HOME ... python legacy/tools/stats_week_links.py \
     --inputs 'data/raw_hdfs/event_hour=2026082007/part-*.parquet' \
     --out data/_stats/week_local --master 'local[8]'
 Run yarn (full 7 days): MODE=yarn INPUT_GLOB=... (see submit_week_stats_yarn.sh)

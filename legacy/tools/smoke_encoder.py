@@ -4,7 +4,7 @@ Checks: shapes, no-NaN, pad-invariance (output independent of padding length),
 invalid-bin semantics, residual mode invariance to uniform speed shifts,
 parameter counts, forward+backward on real data, d-sweep for Ablation 4.
 
-Usage: python tools/smoke_encoder.py
+Usage: python legacy/tools/smoke_encoder.py
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from target_link_v1.models import TrajectoryEncoder  # noqa: E402
 from target_link_v1.utils import seed_everything  # noqa: E402
 

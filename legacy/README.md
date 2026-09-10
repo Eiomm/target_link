@@ -14,8 +14,9 @@
 
 ## 有意未归档(容易误判,勿动)
 
-- `tools/ingest_streaming.py` + `runtime/run_ts.sh` + `configs/*_ts_day*.yaml` + `data/processed_ts/`:
-  ts 管线现役引擎(day21 待补跑),`ingest_spark.py` 是它的分布式重写但 ts 线尚未迁移。
+- `tools/ingest_streaming.py` + `data/processed_ts/`:ts 管线引擎与其产物。day20/21 均已摄取
+  完毕,一次性 day 快照 config 已归档到 `legacy/configs/*_ts_day*.yaml`(见第四轮),
+  产物 `data/processed_ts/` 仍被 `configs/eta_ts.yaml` 引用,保留。
 - `tools/ingest.py` + `tools/check_ingest_equiv.py` + `data/processed_smoke_pandas3/`:
   等价性参照实现,yarn 全量等价验证完成前保留。
 - `data/processed/`:当前 6000ep eta 训练(`configs/eta*.yaml`)正在读的数据,**不是**陈旧产物。
@@ -86,3 +87,53 @@ legacy/scripts,让 `24h → windows_yarn`、`train_smoke → train_windows_job` 
   cell 线的普查/监控,现役。
 - `data/windows_day20260821/`(150GB,NFS)、`data/curves_spark/`、`data/pretrain_corpus/`、
   `data/processed_smoke_*`:对应产物。窗口线虽然停了,但删数据不可逆,留到 cell 线跑通再决定。
+
+---
+
+# 第三轮清理（2026-09-10，主目录只保留现役代码）
+
+第二轮只移动了入口和配置；本轮把已经退出主线的实现、测试和 smoke 一并移入
+`legacy/`。文件仍保留原有目录分层，历史入口也同步改成新路径，因此需要复现实验时仍可运行。
+
+## 本轮归档清单
+
+| 目录 | 文件 | 原因 |
+|---|---|---|
+| `legacy/tools/` | `smoke_aggregation.py`、`smoke_encoder.py`、`smoke_level2.py`、`smoke_windows.py` | 早期组件/窗口连通性检查；现役 cell 线已有 pytest 与独立训练 smoke |
+| `legacy/tools/` | `adapt_samples_windows.py`、`build_windows_spark.py`、`train_windows.py`、`encode_windows.py`、`stats_windows_links.py` | causal-window 实验线已由 cell corpus / CellMAE 取代 |
+| `legacy/tools/` | `build_curves_spark.py`、`build_pretrain_corpus.py`、`train_pretrain.py`、`stats_week_links.py` | curves / CurveMAE 预训练和一次性普查已退出主线 |
+| `legacy/target_link_v1/` | `data/{window_stream,pretrain_stream}.py`、`models/{window_mae,pretrain}.py` | 仅被上述历史训练入口引用 |
+| `legacy/tests/` | `test_windows.py` | 只覆盖已归档的 windows 实现 |
+| `legacy/scripts/` | `check_windows_server.sh` | 其实际工作是 windows pytest + windows 全链 smoke，并非通用体检 |
+
+历史 Python 入口改为从 `legacy.target_link_v1` 导入已归档模块；历史 shell 入口也改为调用
+`legacy/tools/` 和 `legacy/configs/`，避免“归档即断链”。
+
+## 仍留在主目录
+
+- `scripts/submit_cell_smoke_job.sh`：现役 CellMAE 的 A100 全链 smoke，不属于本轮清理对象。
+- `tests/test_cell_corpus.py`、`tests/test_cell_mae.py`：当前主线回归测试。
+- `target_link_v1/models/{encoder,aggregation,level2}.py`：虽然来自较早阶段，CellMAE/ETA
+  仍有直接依赖，不能按文件年龄归档。
+- ingest / profiles / ETA 相关工具：ETA 下游入口仍保留，待明确停线后再整体归档。
+
+---
+
+# 第四轮清理（2026-09-10，ts day 快照 config）
+
+day20/21 的时间切分数据早已落盘（`data/processed_ts/`），4 个一次性 day 快照 config 只有重建
+那两天数据才会再用；9.9 切 cell 建模后整条 ts/ETA 线退为待定下游。归档原则不变：只移不死。
+
+| 文件 | 身份 |
+|---|---|
+| `ingest_ts_day0820.yaml` / `ingest_ts_day0821.yaml` | ts 线分天流式 ingest 配置（产物已生成） |
+| `profiles_ts_day0820.yaml` / `profiles_ts_day0821.yaml` | ts 线分天 profiles 配置（产物已生成） |
+
+断链同步修正：`tools/ingest_streaming.py` 的 `--config` 默认值与 docstring 指向
+`legacy/configs/ingest_ts_day0821.yaml`。
+
+## 有意未归档（本轮判断）
+
+- `configs/eta_ts.yaml`：时间切分 ETA 的主配置（9.4 拍板时间切分为 ETA 主线口径），ETA 下游
+  复跑时仍需要，且其 `data.profiles_npz` 等路径指向仍在用的 `data/processed_ts/` 产物。
+- `data/processed_ts/`：上述产物，删除不可逆，留到 ETA 线去留定案。

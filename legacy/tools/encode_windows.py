@@ -5,15 +5,15 @@ import argparse
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 import torch
 from torch.utils.data import DataLoader
 
-from target_link_v1.data.window_stream import WindowDataset, collate_windows
-from target_link_v1.models.window_mae import WindowMAE
+from legacy.target_link_v1.data.window_stream import WindowDataset, collate_windows
+from legacy.target_link_v1.models.window_mae import WindowMAE
 
 
 def main():

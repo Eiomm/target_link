@@ -39,6 +39,8 @@ def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data", required=True, help="local cell corpus root (train)")
     p.add_argument("--val-data", help="local cell corpus root (validation)")
+    p.add_argument("--val-last-only", action="store_true",
+                   help="evaluate --val-data only after the final epoch")
     p.add_argument("--out", required=True)
     p.add_argument("--obs-dir", default="observations_v2",
                    help="observations_v2 is the build that carries bin_pos")
@@ -50,9 +52,11 @@ def parse_args(argv=None):
                    help="per split per epoch; 0 or -1 = full pass")
     p.add_argument("--max-groups", type=int, default=0,
                    help="dataset-level cap; 0 or -1 = all")
+    p.add_argument("--groups-per-partition", type=int, default=0,
+                   help="sample at most this many groups from every day/bucket; 0 = all")
     p.add_argument("--m-max", type=int, default=16)
     p.add_argument("--probe-batches", type=int, default=2,
-                   help="val batches for the aggregate-ablation probe; 0 = off")
+                   help="val batches for separate CLS/group-bin/all-off probes; 0 = off")
     p.add_argument("--log-every", type=int, default=20)
     p.add_argument("--d-model", type=int, default=256)
     p.add_argument("--heads", type=int, default=8)
@@ -72,6 +76,7 @@ def parse_args(argv=None):
     # normalise it to 0 here rather than rejecting it (0 means full pass).
     a.max_batches = max(a.max_batches, 0)
     a.max_groups = max(a.max_groups, 0)
+    a.groups_per_partition = max(a.groups_per_partition, 0)
     if a.workers < 0 or a.probe_batches < 0:
         p.error("workers and probe-batches must be nonnegative")
     return a
@@ -80,7 +85,8 @@ def parse_args(argv=None):
 def make_loader(root, a, epoch, train):
     ds = CellCorpusDataset(root, obs_dir=a.obs_dir, groups_dir=a.groups_dir,
                            seed=a.seed, epoch=epoch, shuffle_groups=True,
-                           max_groups=a.max_groups or None, m_max=a.m_max)
+                           max_groups=a.max_groups or None, m_max=a.m_max,
+                           groups_per_partition=a.groups_per_partition or None)
     # the mask seed must be the same epoch the dataset shuffles with, or a
     # re-run of one epoch would not reproduce its own batches
     collate = functools.partial(collate_cells, m_max=a.m_max, epoch=epoch)
@@ -102,7 +108,9 @@ def run_split(model, optimizer, root, a, epoch, train):
     bucket_sums = {"k3": 0.0, "k4_16": 0.0, "k17_plus": 0.0}
     bucket_counts = {name: 0 for name in bucket_sums}
     started = time.monotonic()
-    probe, probe_ablated, probe_n = 0.0, 0.0, 0
+    probe_sums = {"normal": 0.0, "cls": 0.0, "group_bin": 0.0,
+                  "aggregate": 0.0}
+    probe_n = 0
     with torch.set_grad_enabled(train):
         for batch in loader:
             batch = to_device(batch, a.device)
@@ -129,12 +137,18 @@ def run_split(model, optimizer, root, a, epoch, train):
                     bucket_sums[name] += float(per_group_loss[selected].sum().detach())
                     bucket_counts[name] += count
             if not train and probe_n < a.probe_batches and has:
-                # Branch-death monitor: if the decoder ignores the level-2 state,
-                # zeroing it costs nothing and the gap collapses towards 0.
-                ablated = masked_reconstruction_loss(
+                # Diagnose the two group-context paths independently. The
+                # legacy all-off probe remains for historical comparability.
+                cls_ablated = masked_reconstruction_loss(
+                    model(batch, ablate_cls=True), batch)
+                group_bin_ablated = masked_reconstruction_loss(
+                    model(batch, ablate_group_bins=True), batch)
+                aggregate_ablated = masked_reconstruction_loss(
                     model(batch, ablate_aggregate=True), batch)
-                probe += float(loss.detach())
-                probe_ablated += float(ablated.detach())
+                probe_sums["normal"] += float(loss.detach())
+                probe_sums["cls"] += float(cls_ablated.detach())
+                probe_sums["group_bin"] += float(group_bin_ablated.detach())
+                probe_sums["aggregate"] += float(aggregate_ablated.detach())
                 probe_n += 1
             if train and has:
                 optimizer.zero_grad(set_to_none=True)
@@ -179,8 +193,12 @@ def run_split(model, optimizer, root, a, epoch, train):
         for name in bucket_sums
     }
     if probe_n:
-        m["aggregate_ablated_loss"] = probe_ablated / probe_n
-        m["aggregate_gap"] = (probe_ablated - probe) / probe_n
+        normal = probe_sums["normal"] / probe_n
+        m["ablation_probe_loss"] = normal
+        for name in ("cls", "group_bin", "aggregate"):
+            ablated = probe_sums[name] / probe_n
+            m[name + "_ablated_loss"] = ablated
+            m[name + "_gap"] = ablated - normal
     return m
 
 
@@ -204,7 +222,7 @@ def main():
     for epoch in range(a.epochs):
         metrics = {"epoch": epoch, "params": n_param}
         metrics["train"] = run_split(model, optimizer, a.data, a, epoch, True)
-        if a.val_data:
+        if a.val_data and (not a.val_last_only or epoch == a.epochs - 1):
             metrics["val"] = run_split(model, optimizer, a.val_data, a, epoch, False)
         if a.device.startswith("cuda"):
             metrics["gpu_peak_memory_mb"] = torch.cuda.max_memory_allocated() / 2 ** 20

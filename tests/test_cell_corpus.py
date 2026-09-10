@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pytest
 import torch
 
 from target_link_v1.data.cell_corpus import CellCorpusDataset, collate_cells
@@ -49,7 +50,8 @@ def _synthetic_corpus(root: Path) -> None:
 
 def test_dataset_piece_folding_and_absolute_bin_position(tmp_path):
     _synthetic_corpus(tmp_path)
-    ds = CellCorpusDataset(tmp_path, obs_dir="observations", shuffle_groups=False)
+    ds = CellCorpusDataset(tmp_path, obs_dir="observations", groups_dir="training_groups",
+                           shuffle_groups=False)
     items = list(ds)
     assert [it["x"].shape for it in items] == [(4, 50, 3), (5, 50, 3)]
 
@@ -67,7 +69,8 @@ def test_dataset_piece_folding_and_absolute_bin_position(tmp_path):
 
 def test_collate_padding_and_reproducible_epoch_mask(tmp_path):
     _synthetic_corpus(tmp_path)
-    ds = CellCorpusDataset(tmp_path, obs_dir="observations", shuffle_groups=False, epoch=7)
+    ds = CellCorpusDataset(tmp_path, obs_dir="observations", groups_dir="training_groups",
+                           shuffle_groups=False, epoch=7)
     items = list(ds)
     batch = collate_cells(items)
 
@@ -95,7 +98,8 @@ def test_collate_padding_and_reproducible_epoch_mask(tmp_path):
 def test_cell_mae_visible_only_forward_backward(tmp_path):
     _synthetic_corpus(tmp_path)
     items = list(CellCorpusDataset(
-        tmp_path, obs_dir="observations", shuffle_groups=False, epoch=3))
+        tmp_path, obs_dir="observations", groups_dir="training_groups",
+        shuffle_groups=False, epoch=3))
     batch = collate_cells(items, epoch=3)
     torch.manual_seed(0)
     model = CellMAE(d_model=16, heads=2, traj_layers=1,
@@ -113,3 +117,15 @@ def test_cell_mae_visible_only_forward_backward(tmp_path):
     altered = model(changed)
     torch.testing.assert_close(output["representation"], altered["representation"])
     torch.testing.assert_close(output["prediction"], altered["prediction"])
+
+
+def test_groups_per_partition_caps_each_partition(tmp_path):
+    _synthetic_corpus(tmp_path)
+    ds = CellCorpusDataset(
+        tmp_path, obs_dir="observations", groups_dir="training_groups",
+        shuffle_groups=False, groups_per_partition=1)
+    assert [item["group_id"] for item in ds] == ["g101"]
+    with pytest.raises(ValueError, match="groups_per_partition"):
+        CellCorpusDataset(
+            tmp_path, obs_dir="observations", groups_dir="training_groups",
+            groups_per_partition=0)

@@ -2,7 +2,7 @@
 # directly (no corpus npz). Same model/train sections as pretrain.yaml.
 data:
   mode: stream
-  shards: data/curves_spark/smoke3      # <out> of tools/build_curves_spark.py
+  shards: data/curves_spark/smoke3      # <out> of legacy/tools/build_curves_spark.py
   workers: 0                            # loader workers (0 = in-process)
   split:
     mode: time                          # past->future: val = latest windows (a
