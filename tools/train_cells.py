@@ -1,7 +1,7 @@
 """Train the cell-level whole-trajectory MAE on a LOCAL cell corpus (no HDFS client assumed).
 
 Reads whatever `CellCorpusDataset` can see under --data (one or more
-(day, bucket) partitions of observations/ + training_groups/), so the training
+(day, bucket) partitions of observations_v2/ + training_groups_k3/), so the training
 split is whatever the caller fetched. --val-data is a second corpus root, which
 keeps the split explicit instead of hiding it in a time filter.
 
@@ -11,6 +11,7 @@ keeps the split explicit instead of hiding it in a time filter.
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import functools
 import json
 import random
@@ -25,7 +26,11 @@ import torch
 from torch.utils.data import DataLoader
 
 from target_link_v1.data.cell_corpus import CellCorpusDataset, collate_cells
-from target_link_v1.models.cell_mae import CellMAE, masked_reconstruction_loss
+from target_link_v1.models.cell_mae import (
+    CellMAE,
+    masked_reconstruction_loss,
+    reconstruction_loss_by_group,
+)
 
 VAL_EPOCH = 10 ** 6   # validation masks are drawn from a fixed epoch: one eval set
 
@@ -37,7 +42,7 @@ def parse_args(argv=None):
     p.add_argument("--out", required=True)
     p.add_argument("--obs-dir", default="observations_v2",
                    help="observations_v2 is the build that carries bin_pos")
-    p.add_argument("--groups-dir", default="training_groups")
+    p.add_argument("--groups-dir", default="training_groups_k3")
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--batch-size", type=int, default=4, help="training groups per step")
     p.add_argument("--workers", type=int, default=2)
@@ -49,14 +54,14 @@ def parse_args(argv=None):
     p.add_argument("--probe-batches", type=int, default=2,
                    help="val batches for the aggregate-ablation probe; 0 = off")
     p.add_argument("--log-every", type=int, default=20)
-    p.add_argument("--d-model", type=int, default=128)
-    p.add_argument("--heads", type=int, default=4)
-    p.add_argument("--traj-layers", type=int, default=2)
-    p.add_argument("--level2-layers", type=int, default=2)
+    p.add_argument("--d-model", type=int, default=256)
+    p.add_argument("--heads", type=int, default=8)
+    p.add_argument("--traj-layers", type=int, default=4)
+    p.add_argument("--level2-layers", type=int, default=4)
     p.add_argument("--dropout", type=float, default=0.1)
     p.add_argument("--target-transform", choices=["raw", "log1p"], default="log1p",
                    help="T_diff is seconds per 10m bin; log1p compresses the curb-side tail")
-    p.add_argument("--lr", type=float, default=3e-4)
+    p.add_argument("--lr", type=float, default=2e-4)
     p.add_argument("--weight-decay", type=float, default=0.01)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
@@ -91,17 +96,38 @@ def run_split(model, optimizer, root, a, epoch, train):
     # validation keeps one fixed mask set so epoch-to-epoch losses are comparable
     ds, loader = make_loader(root, a, epoch if train else VAL_EPOCH, train)
     model.train(train)
-    loss_sum, groups, supervised, masked_bins, seen = 0.0, 0, 0, 0, 0
+    loss_sum, groups, supervised_groups, supervised_batches = 0.0, 0, 0, 0
+    masked_bins, seen = 0, 0
+    recent_losses = deque(maxlen=100)
+    bucket_sums = {"k3": 0.0, "k4_16": 0.0, "k17_plus": 0.0}
+    bucket_counts = {name: 0 for name in bucket_sums}
     started = time.monotonic()
     probe, probe_ablated, probe_n = 0.0, 0.0, 0
     with torch.set_grad_enabled(train):
         for batch in loader:
             batch = to_device(batch, a.device)
             out = model(batch)
-            loss = masked_reconstruction_loss(out, batch)
+            per_group_loss, group_has = reconstruction_loss_by_group(out, batch)
+            group_weight = group_has.to(per_group_loss.dtype)
+            loss = ((per_group_loss * group_weight).sum()
+                    / group_weight.sum().clamp_min(1))
             if not torch.isfinite(loss):
                 raise ValueError("nonfinite loss")
-            has = bool((batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]).any())
+            reconstruction_mask = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]
+            n_supervised = int(group_has.sum())
+            has = n_supervised > 0
+            k = batch["K"]
+            bucket_masks = {
+                "k3": k == 3,
+                "k4_16": (k >= 4) & (k <= 16),
+                "k17_plus": k >= 17,
+            }
+            for name, in_bucket in bucket_masks.items():
+                selected = group_has & in_bucket
+                count = int(selected.sum())
+                if count:
+                    bucket_sums[name] += float(per_group_loss[selected].sum().detach())
+                    bucket_counts[name] += count
             if not train and probe_n < a.probe_batches and has:
                 # Branch-death monitor: if the decoder ignores the level-2 state,
                 # zeroing it costs nothing and the gap collapses towards 0.
@@ -117,27 +143,41 @@ def run_split(model, optimizer, root, a, epoch, train):
                 if not torch.isfinite(grad_norm):
                     raise ValueError("nonfinite gradient norm")
                 optimizer.step()
-            loss_sum += float(loss.detach()) * has
-            supervised += has
-            masked_bins += int((batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]).sum())
+            batch_loss = float(loss.detach())
+            loss_sum += batch_loss * n_supervised
+            supervised_groups += n_supervised
+            supervised_batches += has
+            if has:
+                recent_losses.append(batch_loss)
+            masked_bins += int(reconstruction_mask.sum())
             groups += batch["x"].shape[0]
             seen += 1
             if a.log_every and seen % a.log_every == 0:
                 print(json.dumps({"split": "train" if train else "val", "epoch": epoch,
-                                  "batch": seen, "loss": loss_sum / max(supervised, 1)}),
+                                  "batch": seen, "batch_loss": batch_loss if has else None,
+                                  "moving_avg_loss": (sum(recent_losses) / len(recent_losses)
+                                                      if recent_losses else None),
+                                  "epoch_avg_loss": (loss_sum / max(supervised_groups, 1))}),
                       flush=True)
             if a.max_batches and seen >= a.max_batches:
                 break
     if not groups:
         raise ValueError("no groups in " + ("train" if train else "val") + " split")
-    if not supervised:
+    if not supervised_groups:
         raise ValueError("no group had a masked bin to reconstruct in "
                          + ("train" if train else "val") + " split")
     elapsed = time.monotonic() - started
-    m = {"loss": loss_sum / supervised, "groups": groups,
-         "supervised_groups": supervised, "masked_bins": masked_bins,
+    m = {"loss": loss_sum / supervised_groups, "groups": groups,
+         "supervised_groups": supervised_groups,
+         "supervised_batches": supervised_batches, "masked_bins": masked_bins,
          "batches": seen, "partitions": ds.n_partitions(),
          "seconds": elapsed, "batches_per_second": seen / max(elapsed, 1e-9)}
+    m["loss_by_k"] = {
+        name: {"loss": (bucket_sums[name] / bucket_counts[name]
+                        if bucket_counts[name] else None),
+               "groups": bucket_counts[name]}
+        for name in bucket_sums
+    }
     if probe_n:
         m["aggregate_ablated_loss"] = probe_ablated / probe_n
         m["aggregate_gap"] = (probe_ablated - probe) / probe_n
@@ -173,7 +213,7 @@ def main():
             f.write(json.dumps(metrics) + "\n")
         torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(),
                     "args": vars(a), "epoch": epoch, "model_kwargs": model_kwargs,
-                    "format": "target_link_cell_mae_v1"}, out / "last.pt")
+                    "format": "target_link_cell_mae_v1_group_bins"}, out / "last.pt")
     saved = torch.load(out / "last.pt", map_location=a.device, weights_only=False)
     restored = CellMAE(**saved["model_kwargs"]).to(a.device)
     restored.load_state_dict(saved["model"], strict=True)

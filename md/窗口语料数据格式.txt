@@ -1,5 +1,6 @@
-窗口语料数据格式 (target_link_windows_v2)
+窗口语料数据格式 (target_link_windows_v2，历史路线)
 ========================================
+当前主线已切换为 corpus_v1 的 500m Cell MAE；本文只用于复现归档窗口语料。
 生成者: tools/build_windows_spark.py (Spark/YARN)
 样例:   hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link/windows/day20260821_w600_s600/
 写入:   2026-09-09, application_1782979140233_47636758, 48:36

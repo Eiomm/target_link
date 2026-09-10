@@ -1,7 +1,7 @@
 """Build the V1 canonical corpus for the trajectory-MAE pipeline.
 
-Spec: md/最新讨论想法.md (unit = cell), decisions 2026-09-09:
-  M_max=16, K_min=4, deterministic shuffle + ceil(K/16) even split for K>16,
+Spec: md/最新讨论想法.md (unit = cell), updated 2026-09-10:
+  M_max=16, K_min=3, deterministic shuffle + ceil(K/16) even split for K>16,
   every trajectory used at most once, 50% whole-trajectory mask (training side).
 
 Three stages, each reading the previous stage's HDFS output (so the big pass
@@ -40,7 +40,7 @@ over raw runs exactly once):
          sorted within partition by cell_id.
   cells  observations/ -> cells/ (cell_id, keys, window, K) + the acceptance
          baseline (exact K histogram, per-window shape).
-  groups observations/ -> training_groups/ (group_id, cell_id, group_idx,
+  groups observations/ -> training_groups_k3/ (group_id, cell_id, group_idx,
          group_size, K, sample_ids[]) under K_min / M_max. Rebuild this alone
          when the sampling policy changes -- the corpus is policy-free.
 
@@ -61,11 +61,13 @@ def parse_args():
     p.add_argument("--inputs", required=True,
                    help="comma-separated raw parquet globs (hdfs:// or local)")
     p.add_argument("--out", required=True)
-    p.add_argument("--obs-dir", default="observations",
+    p.add_argument("--obs-dir", default="observations_v2",
                    help="sub-dir of --out holding the ragged corpus; use a "
                         "different one to rebuild obs next to the live copy "
                         "(the row set does not change, so cells/ and "
                         "training_groups/ stay valid)")
+    p.add_argument("--groups-dir", default="training_groups_k3",
+                   help="sub-dir of --out holding policy-dependent groups")
     p.add_argument("--stages", default="obs,cells,groups")
     p.add_argument("--master", default="local[8]")
     p.add_argument("--driver-memory", default="6g")
@@ -77,7 +79,7 @@ def parse_args():
                         "group's observations are co-located")
     p.add_argument("--window-seconds", type=int, default=600)
     p.add_argument("--m-max", type=int, default=16)
-    p.add_argument("--k-min", type=int, default=4)
+    p.add_argument("--k-min", type=int, default=3)
     p.add_argument("--max-records-per-file", type=int, default=4_000_000)
     return p.parse_args()
 
@@ -272,14 +274,15 @@ def _run(a):
             .sortWithinPartitions("cell_id", "group_idx")
             .write.mode("overwrite").partitionBy("day", "bucket")
             .option("maxRecordsPerFile", a.max_records_per_file)
-            .parquet(f"{a.out}/training_groups"))
+            .parquet(f"{a.out}/{a.groups_dir}"))
 
         st = (groups.agg(F.count(F.lit(1)).alias("n_groups"),
                          F.sum("group_size").alias("n_used"),
                          F.max("group_size").alias("max_group_size"),
                          F.avg("group_size").alias("avg_group_size")).head())
         gs = (groups.groupBy("group_size").count().orderBy("group_size").collect())
-        dump("groups", {"m_max": M, "k_min": KMIN,
+        qc_name = "groups_" + a.groups_dir.replace("/", "_")
+        dump(qc_name, {"groups_dir": a.groups_dir, "m_max": M, "k_min": KMIN,
                         "n_groups": int(st["n_groups"]),
                         "n_used_obs": int(st["n_used"]),
                         "max_group_size": int(st["max_group_size"]),

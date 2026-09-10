@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Submit tools/build_corpus.py — build the V1 canonical corpus
-# (ragged observations + cells + training_groups) over the whole week.
+# (ragged observations + cells + policy-dependent groups) over the whole week.
 #
 #   MODE=local  one day on this pod over data/raw_hdfs (whatever hours exist)
 #   MODE=dry    print the yarn spark-submit command without executing
@@ -37,15 +37,16 @@ fi
 
 STAGES="${STAGES:-obs,cells,groups}"
 # Rebuilding obs (e.g. to add a ragged array) can go to a side directory: the
-# row set is unchanged, so cells/ and training_groups/ stay valid and the live
+# row set is unchanged, so cells/ and existing group tables stay valid and the live
 # observations/ keeps serving the training side until the new one is verified.
-OBS_DIR="${OBS_DIR:-observations}"
+OBS_DIR="${OBS_DIR:-observations_v2}"
+GROUPS_DIR="${GROUPS_DIR:-training_groups_k3}"
 SHUFFLE_PARTITIONS="${SHUFFLE_PARTITIONS:-12000}"
 OBS_PARTITIONS="${OBS_PARTITIONS:-1024}"
 BUCKETS="${BUCKETS:-128}"
 WINDOW_SECONDS="${WINDOW_SECONDS:-600}"
 M_MAX="${M_MAX:-16}"
-K_MIN="${K_MIN:-4}"
+K_MIN="${K_MIN:-3}"
 MAX_RECORDS_PER_FILE="${MAX_RECORDS_PER_FILE:-4000000}"
 
 QUEUE="${QUEUE:-root.xinsi_yanfaerzu_default}"
@@ -72,7 +73,8 @@ case "$MODE" in
         --master "${LOCAL_MASTER:-local[8]}" --driver-memory 6g \
         --shuffle-partitions "${LOCAL_SHUFFLE_PARTITIONS:-64}" \
         --obs-partitions 32 --buckets 16 --stages "$STAGES" \
-        --window-seconds "$WINDOW_SECONDS" --m-max "$M_MAX" --k-min "$K_MIN"
+        --window-seconds "$WINDOW_SECONDS" --m-max "$M_MAX" --k-min "$K_MIN" \
+        --groups-dir "$GROUPS_DIR"
     ;;
   dry | yarn)
     : "${HADOOP_USER_NAME:?HADOOP_USER_NAME not set}"
@@ -99,6 +101,7 @@ case "$MODE" in
       --inputs "$INPUT_GLOBS"
       --out "$OUT_DIR"
       --obs-dir "$OBS_DIR"
+      --groups-dir "$GROUPS_DIR"
       --master yarn
       --stages "$STAGES"
       --shuffle-partitions "$SHUFFLE_PARTITIONS"

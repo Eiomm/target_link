@@ -13,7 +13,11 @@ from __future__ import annotations
 import pytest
 import torch
 
-from target_link_v1.models.cell_mae import CellMAE, masked_reconstruction_loss
+from target_link_v1.models.cell_mae import (
+    CellMAE,
+    masked_reconstruction_loss,
+    reconstruction_loss_by_group,
+)
 
 B, M, N = 2, 4, 50
 HOLE, UNKNOWN = 20, 9        # bin 20: nothing present; bin 9: piece, no time
@@ -59,6 +63,8 @@ def test_shapes(model):
     out = model(make_batch())
     assert out["representation"].shape == (B, 32)
     assert out["trajectory_state"].shape == (B, M, 32)
+    assert out["group_bin_state"].shape == (B, N, 32)
+    assert out["group_bin_valid"].shape == (B, N)
     assert out["prediction"].shape == (B, M, N)
     assert out["target"].shape == (B, M, N)
     assert torch.isfinite(out["prediction"]).all()
@@ -75,6 +81,8 @@ def test_masked_trajectory_is_invisible_everywhere(model):
     assert torch.allclose(oa["prediction"][:, 0], ob["prediction"][:, 0])
     assert torch.allclose(oa["prediction"], ob["prediction"])
     assert torch.allclose(oa["representation"], ob["representation"])
+    assert torch.allclose(oa["group_bin_state"], ob["group_bin_state"])
+    assert torch.equal(oa["group_bin_valid"], ob["group_bin_valid"])
 
 
 def test_visible_trajectory_moves_the_aggregate(model):
@@ -84,6 +92,7 @@ def test_visible_trajectory_moves_the_aggregate(model):
     b["x"][:, 3] = torch.rand_like(b["x"][:, 3]) * 40.0
     oa, ob = model(a), model(b)
     assert not torch.allclose(oa["representation"], ob["representation"])
+    assert not torch.allclose(oa["group_bin_state"], ob["group_bin_state"])
     assert not torch.allclose(oa["prediction"][:, 0], ob["prediction"][:, 0])
 
 
@@ -100,22 +109,20 @@ def test_padding_is_inert(model):
     assert torch.allclose(oa["representation"], ob["representation"])
 
 
-def test_invalid_bin_still_attends(model):
-    """presence != validity. A bin whose piece exists but whose T_diff is NaN
-    keeps ratio/observed and MUST stay in the attention set: it is real geometry
-    with an unknown time. If this fails, someone collapsed the two masks and the
-    trajectory silently lost part of its shape."""
+def test_invalid_bin_is_excluded_by_the_frozen_mainline(model):
+    """The current three-feature model uses bin_valid as its attention and
+    pooling mask. Retained ratio/observed values at an invalid bin are inert."""
     a, b = make_batch(), make_batch()
     b["x"][:, 1, UNKNOWN, 1] = 0.4                 # ratio of the invalid bin
     oa, ob = model(a), model(b)
-    assert not torch.allclose(oa["trajectory_state"][:, 1],
-                              ob["trajectory_state"][:, 1])
+    assert torch.allclose(oa["trajectory_state"][:, 1],
+                          ob["trajectory_state"][:, 1])
+    assert torch.allclose(oa["group_bin_state"], ob["group_bin_state"])
 
 
-def test_hole_is_invisible_but_its_ratio_is_the_switch(model):
-    """A hole (ratio == 0) is masked out of attention, so its other channels are
-    unreadable; giving it a ratio makes it appear. This is the `present =
-    ratio > 0` invariant the reader is expected to maintain."""
+def test_hole_is_invisible_until_bin_valid_changes(model):
+    """Changing features cannot activate a masked bin; bin_valid is the frozen
+    mainline's only attention/pooling switch."""
     a, b = make_batch(), make_batch()
     b["x"][:, 2, HOLE, 0] = 33.0                   # T_diff inside a hole
     b["x"][:, 2, HOLE, 2] = 1.0                    # observed inside a hole
@@ -123,16 +130,15 @@ def test_hole_is_invisible_but_its_ratio_is_the_switch(model):
     assert torch.allclose(oa["trajectory_state"], ob["trajectory_state"])
 
     c = make_batch()
-    c["x"][:, 2, HOLE, 1] = 0.5                    # now it is present
-    assert not torch.allclose(oa["trajectory_state"],
-                              model(c)["trajectory_state"])
+    c["x"][:, 2, HOLE, 1] = 0.5
+    assert torch.allclose(oa["trajectory_state"], model(c)["trajectory_state"])
+    c["bin_valid"][:, 2, HOLE] = True
+    assert not torch.allclose(oa["trajectory_state"], model(c)["trajectory_state"])
 
 
 def test_bin_valid_is_a_real_input_channel(model):
-    """§10 regression. "T_diff unknown" (x = [0, 1, 1], bin_valid = 0) and
-    "T_diff is genuinely 0 seconds" (same x, bin_valid = 1) are different bins.
-    They are only distinguishable because bin_valid rides along as the 4th
-    channel -- drop it and this test goes flat."""
+    """Unknown T_diff and a real zero differ through the independent
+    attention/pooling mask, while x remains exactly three features."""
     a, b = make_batch(), make_batch()
     for t in (a, b):
         t["x"][:, 3, 5] = torch.tensor([0.0, 1.0, 1.0])
@@ -148,6 +154,17 @@ def test_ablation_actually_disables_the_aggregate(model):
     on, off = model(a), model(a, ablate_aggregate=True)
     assert not torch.allclose(on["prediction"], off["prediction"])
     assert torch.isfinite(off["prediction"]).all()
+
+
+def test_masked_prediction_reads_visible_per_bin_group_state(model):
+    """The decoder must receive a spatially indexed group channel. Editing a
+    visible bin changes that channel and the masked trajectory reconstruction;
+    the masked trajectory itself remains excluded by the leakage test above."""
+    a, b = make_batch(), make_batch()
+    b["x"][:, 3, 12, 0] += 25.0
+    oa, ob = model(a), model(b)
+    assert not torch.allclose(oa["group_bin_state"], ob["group_bin_state"])
+    assert not torch.allclose(oa["prediction"][:, 0], ob["prediction"][:, 0])
 
 
 def reference_loss(out, batch):
@@ -186,6 +203,16 @@ def test_nothing_to_reconstruct_is_dropped_not_zeroed(model):
     assert masked_reconstruction_loss(model(b), b).item() == pytest.approx(0.0)
 
 
+def test_per_group_loss_keeps_empty_groups_out(model):
+    a = make_batch()
+    a["mae_mask"][1] = False
+    out = model(a)
+    loss, has = reconstruction_loss_by_group(out, a)
+    assert loss.shape == (B,)
+    assert has.tolist() == [True, False]
+    assert float(masked_reconstruction_loss(out, a)) == pytest.approx(float(loss[0]))
+
+
 def test_backward_is_finite(model):
     m = CellMAE(d_model=32, heads=4, traj_layers=1, level2_layers=1, dropout=0.0)
     m.train()
@@ -199,7 +226,6 @@ def test_backward_is_finite(model):
 
 def test_feature_axis_matches_the_reader():
     from target_link_v1.data.cell_corpus import FEATURES
-    from target_link_v1.models.cell_mae import I_RATIO, N_FEATURES
+    from target_link_v1.models.cell_mae import N_FEATURES
     assert tuple(FEATURES) == ("T_diff", "ratio", "observed")
     assert N_FEATURES == len(FEATURES)
-    assert FEATURES[I_RATIO] == "ratio"

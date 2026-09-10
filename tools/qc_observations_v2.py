@@ -37,6 +37,7 @@ def main():
         F.min("dt").alias("dt_min"), F.max("dt").alias("dt_max"),
         F.sum(F.when((F.col("dt") < 0) | (F.col("dt") >= 600), 1).otherwise(0)).alias("dt_bad_strict"),
         F.sum(F.when(F.col("dt") == 600, 1).otherwise(0)).alias("dt_float32_edge"),
+        F.sum(F.when((F.col("dt") < 0) | (F.col("dt") > 600), 1).otherwise(0)).alias("dt_bad_hard"),
         F.sum(F.when(~aligned, 1).otherwise(0)).alias("ragged_length_bad"),
         F.min("n_pieces").alias("n_pieces_min"), F.max("n_pieces").alias("n_pieces_max"),
     ).first().asDict()
@@ -58,7 +59,7 @@ def main():
               "rows": row, "pieces": ps}
     hard_ok = (schema_ok and row["row_count_equal"] and row["ragged_length_bad"] == 0
                and ps["bin_pos_bad"] == 0 and ps["ratio_pct_bad"] == 0
-               and ps["valid_tdiff_bad"] == 0 and row["dt_bad_strict"] == 0)
+               and ps["valid_tdiff_bad"] == 0 and row["dt_bad_hard"] == 0)
     result["pass"] = hard_ok
     payload = json.dumps(result, ensure_ascii=False, sort_keys=True)
     print(payload, flush=True)

@@ -1,4 +1,4 @@
-"""Cell-level whole-trajectory MAE (spec md/最新讨论想法.md §4).
+"""Cell-level whole-trajectory MAE (spec md/最新讨论想法.md §5).
 
 A cell is (map_version, target_link_id, seg_idx, 10min window): one 500m segment
 of one link in one 10-minute window. Its trajectories are the rows of a training
@@ -9,15 +9,17 @@ trajectory is a [50, 3] profile of (T_diff, ratio, observed) plus `bin_valid`.
     r_k + TimeEmbedding(delta_t)                  -> z_k
     keep visible trajectory tokens only           -> z_visible
     [CLS] + z_visible -> TrajectoryLevelTransformer -> h_CLS
-    h_CLS + (bin position, delta_t) -> decoder     -> T_diff per bin
+    h_CLS + visible per-bin group profile
+          + (bin position, delta_t) -> decoder     -> T_diff per bin
 
 Choices worth naming, because they are what the smoke is meant to exercise:
 
   * The mask unit is a whole trajectory. Level 2 receives only visible
     trajectory tokens, so a hidden profile cannot leak into h_CLS.
-  * The decoder reads h_CLS, never the trajectory's own level-1 state. Passing
-    `ablate_aggregate=True` zeroes h_CLS as a branch-death monitor:
-    if the loss gap collapses towards 0, the decoder is ignoring the CLS.
+  * The decoder reads h_CLS and a per-bin mean of visible trajectories' level-1
+    states, never the target trajectory's own state. This preserves spatial
+    congestion information that was previously destroyed by trajectory pooling.
+    `ablate_aggregate=True` zeroes both group channels as a branch-death monitor.
   * T_diff stays in seconds. It is never converted to speed -- on a fixed-length
     bin the crossing time already is the motion feature.
   * The feature axis remains exactly (T_diff, ratio, observed). `bin_valid` is
@@ -52,7 +54,7 @@ class TimeEmbedding(nn.Module):
 class CellTrajectoryEncoder(nn.Module):
     """Bin MLP + absolute position + Transformer + valid-bin mean pooling."""
 
-    def __init__(self, d_model=128, heads=4, layers=2, n_bins=N_BINS, dropout=0.1):
+    def __init__(self, d_model=256, heads=8, layers=4, n_bins=N_BINS, dropout=0.1):
         super().__init__()
         self.n_bins = int(n_bins)
         self.bin_proj = nn.Sequential(
@@ -65,9 +67,9 @@ class CellTrajectoryEncoder(nn.Module):
         self.encoder = nn.TransformerEncoder(layer, layers)
         self.norm = nn.LayerNorm(d_model)
 
-    def forward(self, x, bin_valid):
+    def forward_tokens(self, x, bin_valid):
         """x [P, 50, 3] raw (T_diff seconds, ratio 0..1, observed 0/1),
-        bin_valid [P, 50] bool. Returns r [P, d_model]."""
+        bin_valid [P, 50] bool. Returns pooled r and bin states."""
         P, n, _ = x.shape
         if n != self.n_bins:
             raise ValueError("trajectory width %d != n_bins %d" % (n, self.n_bins))
@@ -80,11 +82,15 @@ class CellTrajectoryEncoder(nn.Module):
         safe[empty, 0] = True
         h = self.encoder(h, src_key_padding_mask=~safe)
         m = bin_valid.to(x.dtype).unsqueeze(-1)
-        return self.norm((h * m).sum(1) / m.sum(1).clamp_min(1.0))
+        r = self.norm((h * m).sum(1) / m.sum(1).clamp_min(1.0))
+        return r, self.norm(h)
+
+    def forward(self, x, bin_valid):
+        return self.forward_tokens(x, bin_valid)[0]
 
 
 class CellMAE(nn.Module):
-    def __init__(self, d_model=128, heads=4, traj_layers=2, level2_layers=2,
+    def __init__(self, d_model=256, heads=8, traj_layers=4, level2_layers=4,
                  n_bins=N_BINS, dropout=0.1, target_transform="log1p"):
         super().__init__()
         if target_transform not in ("raw", "log1p"):
@@ -100,15 +106,18 @@ class CellMAE(nn.Module):
         # segment, and when the trajectory entered it.
         self.dec_pos_emb = nn.Embedding(self.n_bins, d_model)
         self.dec_query = nn.Sequential(nn.Linear(2 * d_model, d_model), nn.GELU())
-        self.decoder = nn.Sequential(nn.Linear(2 * d_model, d_model), nn.GELU(),
+        self.profile_proj = nn.Sequential(nn.Linear(d_model, d_model), nn.GELU(),
+                                          nn.LayerNorm(d_model))
+        self.decoder = nn.Sequential(nn.Linear(3 * d_model, d_model), nn.GELU(),
                                      nn.Linear(d_model, d_model), nn.GELU(),
                                      nn.Linear(d_model, 1))
 
     def forward(self, batch, ablate_aggregate=False):
         """batch: the dict `collate_cells` returns, already on the model's device.
 
-        Returns `representation` h_CLS [B, d], `trajectory_state` [B, m_max, d]
-        (zero on padding), `prediction` and `target` [B, m_max, n_bins].
+        Returns `representation` h_CLS [B, d], `group_bin_state` [B, n_bins, d],
+        `trajectory_state` [B, m_max, d] (zero on padding), and `prediction` /
+        `target` [B, m_max, n_bins].
         """
         x = batch["x"]                                    # [B,M,50,3]
         bin_valid = batch["bin_valid"]                    # [B,M,50]
@@ -120,7 +129,8 @@ class CellMAE(nn.Module):
                              % (self.n_bins, N_FEATURES, tuple(x.shape)))
         P = B * M
         t = self.time_emb(batch["delta_t"].reshape(P))    # [P,d]
-        r = self.traj_encoder(x.reshape(P, n, F), bin_valid.reshape(P, n))
+        r, bin_state = self.traj_encoder.forward_tokens(
+            x.reshape(P, n, F), bin_valid.reshape(P, n))
         z = r + t
         # The frozen V1 level-2 input is [CLS] + visible trajectory tokens.
         # Masked trajectories and padding are both absent from its key/value set.
@@ -130,14 +140,30 @@ class CellMAE(nn.Module):
         state = x.new_zeros(P, h_cls.shape[-1])
         state[keep] = h_rows
         state = state.reshape(B, M, -1)
+
+        # Keep the spatial axis alive across trajectories. Only visible,
+        # non-padding trajectories contribute, so the reconstruction target
+        # cannot leak through this path. A bin with no visible valid value gets
+        # exactly zero context after projection.
+        visible_bins = ((traj_valid & ~mae_mask).unsqueeze(-1) & bin_valid)
+        w = visible_bins.to(x.dtype).unsqueeze(-1)
+        bins = bin_state.reshape(B, M, n, -1)
+        group_bins = (bins * w).sum(1) / w.sum(1).clamp_min(1.0)
+        group_bin_valid = visible_bins.any(1)
+        group_bins = self.profile_proj(group_bins)
+        group_bins = group_bins * group_bin_valid.unsqueeze(-1).to(group_bins.dtype)
+
         base = h_cls.unsqueeze(1).expand(B, M, -1)
         if ablate_aggregate:
             base = torch.zeros_like(base)
+            group_bins = torch.zeros_like(group_bins)
         pos = self.dec_pos_emb(torch.arange(n, device=x.device))
         query = self.dec_query(torch.cat([pos.unsqueeze(0).expand(P, -1, -1),
                                           t.unsqueeze(1).expand(P, n, -1)], -1))
-        raw = self.decoder(torch.cat([query, base.reshape(P, 1, -1).expand(P, n, -1)],
-                                     -1)).squeeze(-1)        # [P,n]
+        group_context = group_bins.unsqueeze(1).expand(B, M, n, -1).reshape(P, n, -1)
+        raw = self.decoder(torch.cat([
+            query, base.reshape(P, 1, -1).expand(P, n, -1), group_context], -1)
+        ).squeeze(-1)                                      # [P,n]
         # Prediction lives in the target space. A softplus would bend a log1p
         # target, so it is only applied where the target is in seconds.
         pred = raw if self.target_transform == "log1p" else F.softplus(raw)
@@ -146,8 +172,21 @@ class CellMAE(nn.Module):
             target = torch.log1p(target.clamp_min(0.0))
         return {"representation": h_cls,
                 "trajectory_state": state,
+                "group_bin_state": group_bins,
+                "group_bin_valid": group_bin_valid,
                 "prediction": pred.reshape(B, M, n),
                 "target": target.reshape(B, M, n)}
+
+
+def reconstruction_loss_by_group(output, batch):
+    """Return one Huber loss per group plus a has-supervision mask."""
+    mask = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]     # [B,M,50]
+    err = F.huber_loss(output["prediction"], output["target"], reduction="none")
+    cnt = mask.sum(-1)                                              # [B,M]
+    per_traj = (err * mask).sum(-1) / cnt.clamp_min(1)
+    rows = cnt > 0
+    per_group = (per_traj * rows).sum(1) / rows.sum(1).clamp_min(1)
+    return per_group, rows.any(1)
 
 
 def masked_reconstruction_loss(output, batch):
@@ -155,14 +194,9 @@ def masked_reconstruction_loss(output, batch):
 
     A group's loss is the mean over the masked trajectories that have at least
     one bin with a known T_diff; groups with nothing to reconstruct are dropped
-    rather than counted as a zero (with K_min=4 and the >=3-valid rule in
+    rather than counted as a zero (with K_min=3 and the >=3-valid rule in
     collate_cells an unmasked group can still happen, and it must not dilute).
     """
-    mask = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]     # [B,M,50]
-    err = F.huber_loss(output["prediction"], output["target"], reduction="none")
-    cnt = mask.sum(-1)                                              # [B,M]
-    per_traj = (err * mask).sum(-1) / cnt.clamp_min(1)
-    rows = (cnt > 0).to(per_traj.dtype)
-    has = (rows.sum(1) > 0).to(per_traj.dtype)                      # [B]
-    per_group = (per_traj * rows).sum(1) / rows.sum(1).clamp_min(1.0)
-    return (per_group * has).sum() / has.sum().clamp_min(1.0)
+    per_group, has = reconstruction_loss_by_group(output, batch)
+    weight = has.to(per_group.dtype)
+    return (per_group * weight).sum() / weight.sum().clamp_min(1)

@@ -3,7 +3,7 @@
 Corpus contract (tools/build_corpus.py, spec md/最新讨论想法.md):
 
   observations/     one row per (cell, trajectory) observation, ragged
-  training_groups/  one row per training group: at most m_max=16 trajectories
+  training_groups_k3/ one row per training group: at most m_max=16 trajectories
                     of one cell. A cell with K>16 was split deterministically
                     and every trajectory appears in exactly one group, so a
                     group is the training unit and K_min/M_max are policy that
@@ -38,7 +38,7 @@ Whole-trajectory MAE masking (50%, pinned) is produced here, not in the model:
 token. It is drawn per group from (epoch, group_id), so an epoch is
 reproducible and a re-run of the same epoch is identical; call `set_epoch`
 between epochs. Groups with fewer than two valid trajectories are left
-unmasked -- with K_min=4 that is a corner case, but masking the only visible
+unmasked -- with K_min=3 that is a corner case, but masking the only visible
 trajectory would leave the encoder nothing to attend to.
 """
 from __future__ import annotations
@@ -124,7 +124,7 @@ class CellCorpusDataset(IterableDataset):
     """
 
     def __init__(self, directory, obs_dir="observations_v2",
-                 groups_dir="training_groups", days=None, seed=0, epoch=0,
+                 groups_dir="training_groups_k3", days=None, seed=0, epoch=0,
                  shuffle_groups=True, max_groups=None, m_max=M_MAX,
                  n_bins=N_BINS):
         super().__init__()
@@ -139,7 +139,7 @@ class CellCorpusDataset(IterableDataset):
                 parts.append((day, bucket))
         if not parts:
             raise ValueError("No (day, bucket) partition holds both observations "
-                             "and training_groups -- is the corpus built?")
+                             "and the selected groups directory -- is the corpus built?")
         self.partitions = parts
         self.seed, self.epoch = int(seed), int(epoch)
         self.shuffle_groups = bool(shuffle_groups)
@@ -251,7 +251,10 @@ class CellCorpusDataset(IterableDataset):
         wid, nw = (worker.id, worker.num_workers) if worker else (0, 1)
         # every worker takes the SAME partition permutation, then disjoint
         # indices, so sharding stays balanced without a barrier
-        order = np.random.default_rng(self.seed).permutation(len(self.partitions))[wid::nw]
+        # A capped epoch should not revisit the same leading partitions forever.
+        # Validation passes a fixed epoch, so its order remains reproducible.
+        order = np.random.default_rng([self.seed, self.epoch]).permutation(
+            len(self.partitions))[wid::nw]
         seen = 0
         for pi in order:
             day, bucket = self.partitions[int(pi)]

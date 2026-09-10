@@ -3,8 +3,8 @@
 #
 # Platform form (Web 训练任务 -> 创建单机任务 / luban-client):
 #   启动命令: bash /nfs/dataset-ofs-494-1/project/user/junao/target_link/scripts/submit_cell_train_job.sh
-#   资源:     1×GPU 单机 (选 A100)。模型很小(d_model=128/2+2 层),显存不是瓶颈,
-#             A100 的价值在吞吐;batch_size 可以往上调。
+#   资源:     1×GPU 单机 (选 A100)。主规格为 d_model=256、4+4 层、8 heads；
+#             仍是约 700 万参数的中小模型，A100 的主要价值在吞吐。
 #   镜像:     本实验环境快照(需含 hadoop 客户端 — 本脚本要把语料从 HDFS 拉到 NFS)
 #   日志:     stdout 不重定向,平台日志页实时可见;metrics/ckpt 落 NFS 的 $OUT
 #
@@ -19,7 +19,7 @@
 # 必须用 observations_v2:只有它带 ragged `bin_pos`(段内 10m bin 位置,0..49)。
 # 老的 observations/ 没有这一列,reader 会直接报缺列。
 #
-# Overridable: TRAIN_PARTS / VAL_PARTS / OBS_DIR / DATA / OUT / EPOCHS /
+# Overridable: TRAIN_PARTS / VAL_PARTS / OBS_DIR / GROUPS_DIR / DATA / OUT / EPOCHS /
 #   MAX_BATCHES / BATCH_SIZE / WORKERS / DEVICE / FETCH / FORCE_FETCH / DRY_RUN / EXTRA
 set -euo pipefail
 
@@ -28,7 +28,7 @@ ENV_ROOT="${ENV_ROOT:-/nfs/dataset-ofs-494-1/project/user/junao/ruiqian/qwen12}"
 HDFS_BASE="${HDFS_BASE:-hdfs://DClusterNmg3/user/bigdata-dp/user/junao/target_link}"
 HDFS_CORPUS="${HDFS_CORPUS:-$HDFS_BASE/corpus_v1}"
 OBS_DIR="${OBS_DIR:-observations_v2}"
-GROUPS_DIR="${GROUPS_DIR:-training_groups}"
+GROUPS_DIR="${GROUPS_DIR:-training_groups_k3}"
 
 # train = 2026-08-21 的 4 个连续 10min window(bucket = 当日第几个 window)
 # val   = 次日同一个钟点窗口:同一条路上的另一个早上,而不是同一天的尾巴
@@ -45,7 +45,7 @@ EPOCHS="${EPOCHS:-1}"
 # 一个 bucket ≈ 10 万个 training group,跑满不现实;首次看效果用 max-batches 截断
 MAX_BATCHES="${MAX_BATCHES:-200}"
 BATCH_SIZE="${BATCH_SIZE:-4}"
-WORKERS="${WORKERS:-2}"
+WORKERS="${WORKERS:-4}"
 M_MAX="${M_MAX:-16}"
 DEVICE="${DEVICE:-cuda}"
 EXTRA="${EXTRA:-}"
@@ -177,10 +177,10 @@ for side in ("train", "val"):
             # valid=1 means "T_diff is known": if it were not, the reader's
             # bincount would sum a NaN straight into that bin
             v = pc.list_flatten(o["valid"]).to_numpy(zero_copy_only=False)
-            nn = pc.is_null(pc.list_flatten(o["T_diff"])).to_numpy(zero_copy_only=False)
-            bad = int((v & nn).sum())
+            td = pc.list_flatten(o["T_diff"]).to_numpy(zero_copy_only=False)
+            bad = int((v & ~np.isfinite(td)).sum())
             if bad:
-                sys.exit("%s: %d pieces are valid=1 with a null T_diff" % (of[0], bad))
+                sys.exit("%s: %d pieces are valid=1 with a nonfinite T_diff" % (of[0], bad))
             dt = o["dt"].to_numpy(zero_copy_only=False)
             # dt is a float32 of a double difference: a few rows round up to
             # exactly 600.0 (6 in 1.2M on bucket 64 of 20260822). The reader

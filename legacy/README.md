@@ -63,6 +63,17 @@ legacy/scripts,让 `24h → windows_yarn`、`train_smoke → train_windows_job` 
 → `legacy/configs/pretrain.yaml`;`md/窗口管线使用.md` 与 `configs/profiles_job.yaml` 注释里
 指向已移走 config 的路径也一并更正。
 
+### `legacy/md/` — 合并后保留的原始材料
+
+| 文件 | 身份 | 当前替代文档 |
+|---|---|---|
+| `9.8曲线语料改造方案.md` | 7 天限量 curves 方案 | `md/9.8progress.md` + 当前 cell 主线 |
+| `200m因果窗口改造方案.md` | 200m causal-window 设计稿 | `md/最新讨论想法.md` |
+| `原始轨迹样例.md` | 单条原始轨迹完整 dump | `md/最新讨论想法.md` 的精简数据契约 |
+
+这些文件来自本地未跟踪文档。合并时保留原文，只补了历史状态说明；完全重复的
+`md/想法.md` 已由内容相同的 `md/最新讨论想法.md` 吸收。
+
 ## 有意未归档(本轮判断,容易误判,勿动)
 
 - `scripts/check_windows_server.sh`:名字带 windows,内容是**通用**的 pod 环境体检(选 python、

@@ -19,12 +19,13 @@ export TRAIN_PARTS="20260821:64 20260821:65 20260821:66 20260821:67"
 export VAL_PARTS="20260822:64"
 export DATA="$REPO/runtime/cell_smoke_20260821_64_67"
 export OBS_DIR="observations_v2"     # 必须:v1 的 observations 没有 bin_pos
+export GROUPS_DIR="training_groups_k3"
 
 # --- 训练:够跑通就行 --------------------------------------------------------
-export EPOCHS=30
-export MAX_BATCHES=0
-export BATCH_SIZE=64
-export WORKERS=2
+export EPOCHS=2
+export MAX_BATCHES=200
+export BATCH_SIZE=32
+export WORKERS=4
 export DEVICE=cuda
 export OUT="$REPO/runtime/cell_train_smoke_a100_$(date +%m%d_%H%M)"
 
