@@ -41,8 +41,10 @@ def parse_args(argv=None):
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--batch-size", type=int, default=4, help="training groups per step")
     p.add_argument("--workers", type=int, default=2)
-    p.add_argument("--max-batches", type=int, default=0, help="per split per epoch; 0=all")
-    p.add_argument("--max-groups", type=int, default=0, help="dataset-level cap; 0=all")
+    p.add_argument("--max-batches", type=int, default=0,
+                   help="per split per epoch; 0 or -1 = full pass")
+    p.add_argument("--max-groups", type=int, default=0,
+                   help="dataset-level cap; 0 or -1 = all")
     p.add_argument("--m-max", type=int, default=16)
     p.add_argument("--probe-batches", type=int, default=2,
                    help="val batches for the aggregate-ablation probe; 0 = off")
@@ -59,8 +61,12 @@ def parse_args(argv=None):
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     a = p.parse_args(argv)
-    if a.epochs <= 0 or a.batch_size <= 0 or a.max_batches < 0 or a.max_groups < 0:
+    if a.epochs <= 0 or a.batch_size <= 0:
         p.error("invalid training sizes")
+    # -1 is the shell convention for "no cap"; the loop tests truthiness, so
+    # normalise it to 0 here rather than rejecting it (0 means full pass).
+    a.max_batches = max(a.max_batches, 0)
+    a.max_groups = max(a.max_groups, 0)
     if a.workers < 0 or a.probe_batches < 0:
         p.error("workers and probe-batches must be nonnegative")
     return a
