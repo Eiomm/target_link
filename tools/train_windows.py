@@ -33,11 +33,22 @@ def main():
     p.add_argument("--heads", type=int, default=4)
     p.add_argument("--layers", type=int, default=2)
     p.add_argument("--group-layers", type=int, default=2)
-    p.add_argument("--time-features", choices=["none", "curve", "bin"], default="curve")
+    p.add_argument("--time-features", choices=["none", "curve", "bin"], default="none",
+                   help="none = design-doc f_i; curve/bin add coarse age as an ablation")
+    p.add_argument("--target-transform", choices=["raw", "log1p"], default="log1p")
+    p.add_argument("--bin-size-m", type=float, default=10.0,
+                   help="production bin grid; ratio and the dt-per-bin target scale with it")
+    p.add_argument("--decoder-input", choices=["hidden", "cls"], default="hidden",
+                   help="level-2 state the decoder reads; cls = pure CLS bottleneck")
+    p.add_argument("--probe-batches", type=int, default=4,
+                   help="validation batches for the aggregate-ablation probe; 0 = off")
     p.add_argument("--age-bucket-seconds", type=int, default=60)
     p.add_argument("--max-curves-per-snapshot", type=int, default=512)
-    p.add_argument("--mask-ratio", type=float, default=0.5)
-    p.add_argument("--whole-pass-probability", type=float, default=0.5)
+    p.add_argument("--mask-ratio", type=float, default=0.5,
+                   help="fallback span fraction inside a single-trajectory snapshot")
+    p.add_argument("--whole-pass-probability", type=float, default=0.5,
+                   help="per-trajectory probability of hiding the whole pass (main path); "
+                        "0 = span-only ablation, always >=1 hidden and >=1 visible otherwise")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     preliminary, _ = p.parse_known_args()
@@ -55,6 +66,8 @@ def main():
         p.error("data, out, train-end, val-start, val-end are required")
     if a.epochs <= 0 or a.batch_size <= 0 or a.max_batches < 0 or a.workers < 0:
         p.error("invalid training sizes")
+    if a.bin_size_m <= 0 or a.probe_batches < 0:
+        p.error("bin-size-m must be positive and probe-batches nonnegative")
     random.seed(a.seed)
     np.random.seed(a.seed)
     torch.manual_seed(a.seed)
@@ -72,7 +85,9 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=False)
     model_kwargs = dict(d_model=a.d_model, heads=a.heads, layers=a.layers,
-                        group_layers=a.group_layers, time_features=a.time_features)
+                        group_layers=a.group_layers, time_features=a.time_features,
+                        target_transform=a.target_transform, bin_size_m=a.bin_size_m,
+                        decoder_input=a.decoder_input)
     model = WindowMAE(**model_kwargs).to(a.device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
     for epoch in range(a.epochs):
@@ -86,6 +101,7 @@ def main():
             loader = DataLoader(dataset, batch_size=a.batch_size, collate_fn=collate_windows,
                                 num_workers=a.workers)
             total, num, batches, supervised, masked_bins = 0.0, 0, 0, 0, 0
+            probe, probe_ablated, probe_n = 0.0, 0.0, 0
             # Fixed validation masks, without resetting the training RNG stream.
             state = torch.random.get_rng_state()
             cuda_state = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
@@ -99,6 +115,16 @@ def main():
                     loss = reconstruction_loss(pred, mask, b["curve_group"], b["n_groups"])
                     if not torch.isfinite(loss):
                         raise ValueError("Nonfinite loss")
+                    if not train and probe_n < a.probe_batches:
+                        # Branch-death monitor: if the decoder ignores the level-2
+                        # state, zeroing it costs nothing and the gap collapses
+                        # towards 0, which is the V2 shortcut failure mode.
+                        ablated = reconstruction_loss(
+                            model(b, mask, ablate_aggregate=True), mask,
+                            b["curve_group"], b["n_groups"])
+                        probe += float(loss.detach())
+                        probe_ablated += float(ablated.detach())
+                        probe_n += 1
                     eligible = sum(bool(mask[b["curve_group"] == g].any()) for g in range(b["n_groups"]))
                     if train and eligible:
                         optimizer.zero_grad(set_to_none=True)
@@ -124,13 +150,16 @@ def main():
             metrics[side + "_snapshots"] = num
             metrics[side + "_supervised_snapshots"] = supervised
             metrics[side + "_masked_bins"] = masked_bins
+            if probe_n:
+                metrics[side + "_aggregate_ablated_loss"] = probe_ablated / probe_n
+                metrics[side + "_aggregate_gap"] = (probe_ablated - probe) / probe_n
         print(json.dumps(metrics), flush=True)
         with (out / "metrics.jsonl").open("a") as f:
             f.write(json.dumps(metrics) + "\n")
         torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(),
                     "config": vars(a), "data_meta": ds.meta, "epoch": epoch,
                     "model_kwargs": model_kwargs,
-                    "format": "target_link_window_mae_v1"}, out / "last.pt")
+                    "format": "target_link_window_mae_v3"}, out / "last.pt")
 
 
 if __name__ == "__main__":

@@ -22,6 +22,17 @@ import torch
 import torch.nn as nn
 
 
+def within_rank(group_idx: torch.Tensor, n_groups: int) -> torch.Tensor:
+    """Position of each row among the rows sharing its group id, in row order."""
+    counts = torch.bincount(group_idx, minlength=n_groups)
+    order = torch.argsort(group_idx, stable=True)
+    starts = torch.cumsum(counts, dim=0) - counts
+    within = torch.empty_like(group_idx)
+    within[order] = (torch.arange(len(group_idx), device=group_idx.device)
+                     - starts[group_idx[order]])
+    return within
+
+
 def pack_groups(
     r: torch.Tensor, group_idx: torch.Tensor, n_groups: int
 ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -41,12 +52,9 @@ def pack_groups(
         )
     counts = torch.bincount(group_idx, minlength=n_groups)          # [G]
     k_max = max(int(counts.max().item()), 1) if n_groups else 1
-    # within-group rank of each row, sort-free: rank = position among the rows
-    # sharing its group id, in row order
-    order = torch.argsort(group_idx, stable=True)                    # [P]
-    starts = torch.cumsum(counts, dim=0) - counts                    # [G]
-    within = torch.empty(P, dtype=torch.long, device=device)
-    within[order] = torch.arange(P, device=device) - starts[group_idx[order]]
+    # within-group rank of each row: position among the rows sharing its group
+    # id, in row order
+    within = within_rank(group_idx, n_groups)
     packed = r.new_zeros(n_groups, k_max, d)
     packed[group_idx, within] = r
     pad = torch.arange(k_max, device=device).unsqueeze(0) >= counts.unsqueeze(1)
@@ -83,15 +91,27 @@ class TrajectoryLevelTransformer(nn.Module):
         # at O(1) scale — same rationale as TrajectoryEncoder.feature_norm
         self.feature_norm = nn.LayerNorm(d_model)
 
-    def forward(
+    def forward_tokens(
         self, r_traj: torch.Tensor, group_idx: torch.Tensor, n_groups: int
-    ) -> torch.Tensor:
-        """r_traj [P, d], group_idx [P] int64 in [0, n_groups).
-        Returns h_CLS [n_groups, d] — one row per (sub-link, time window)."""
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return (h_CLS [G, d], h_rows [P, d]).
+
+        h_rows is the transformer state of each trajectory token, aligned with
+        the r_traj rows. A decoder may read h_rows instead of a level-1 skip
+        connection, which is what keeps the CLS readout from being bypassed.
+        """
         packed, pad = pack_groups(r_traj, group_idx, n_groups)      # [G, K, d]
         G = packed.shape[0]
         cls = self.cls_token.view(1, 1, -1).expand(G, 1, -1)
         x = torch.cat([cls, packed], dim=1)                         # [G, K+1, d]
         pad = torch.cat([pad.new_zeros((G, 1)), pad], dim=1)        # CLS never masked
-        h = self.encoder(x, src_key_padding_mask=pad)               # [G, K+1, d]
-        return self.feature_norm(h[:, 0])                           # [G, d]
+        h = self.feature_norm(self.encoder(x, src_key_padding_mask=pad))
+        within = within_rank(group_idx, n_groups)
+        return h[:, 0], h[:, 1:, :][group_idx, within]
+
+    def forward(
+        self, r_traj: torch.Tensor, group_idx: torch.Tensor, n_groups: int
+    ) -> torch.Tensor:
+        """r_traj [P, d], group_idx [P] int64 in [0, n_groups).
+        Returns h_CLS [n_groups, d] — one row per (sub-link, time window)."""
+        return self.forward_tokens(r_traj, group_idx, n_groups)[0]

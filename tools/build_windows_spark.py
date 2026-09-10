@@ -13,8 +13,12 @@ import json
 import math
 
 KEY = ["map_version", "target_link_id", "sample_id", "bin_idx"]
-GROUP = ["map_version", "target_link_id", "anchor_ts"]
-FORMAT = "target_link_windows_v1"
+# Passage cap and its audit stay per physical link per anchor: one vehicle
+# crossing a long link must count once, not once per modeling unit.
+LINK_GROUP = ["map_version", "target_link_id", "anchor_ts"]
+# A training sample is (modeling unit, anchor), not (physical link, anchor).
+UNIT_GROUP = LINK_GROUP + ["sub_id"]
+FORMAT = "target_link_windows_v2"
 
 
 def positive(value):
@@ -32,11 +36,14 @@ def parser():
     p.add_argument("--anchor-start", type=int, required=True, help="inclusive UTC epoch seconds")
     p.add_argument("--anchor-end", type=int, required=True, help="exclusive UTC epoch seconds")
     p.add_argument("--lookback-seconds", type=positive, default=600)
-    p.add_argument("--stride-seconds", type=positive, default=60)
+    p.add_argument("--stride-seconds", type=positive, default=600,
+                   help="V1: equal to lookback, so windows are disjoint; a smaller "
+                        "stride re-references each event from ~lookback/stride snapshots")
     p.add_argument("--max-passes", type=int, default=0, help="per full link per anchor; 0=all")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--sub-length-m", type=float, default=200.0)
-    p.add_argument("--max-bins", type=positive, default=40)
+    p.add_argument("--max-bins", type=positive, default=21,
+                   help="per curve; a modeling unit is <=sub-length-m, plus one straddling bin")
     p.add_argument("--max-speed", type=float, default=33.3)
     p.add_argument("--partitions", type=positive, default=200)
     p.add_argument("--shuffle-partitions", type=positive, default=800)
@@ -66,6 +73,42 @@ def validate_args(a):
 def finite(c):
     from pyspark.sql import functions as F
     return c.isNotNull() & ~F.isnan(c) & (F.abs(c) < float("inf"))
+
+
+def snapshot_id_expr():
+    """Snapshot identity is the modeling unit, never the physical link."""
+    from pyspark.sql import functions as F
+    return F.sha2(F.to_json(F.struct(*UNIT_GROUP)), 256)
+
+
+def unit_geometry(df, a, length_column="link_length_m"):
+    """Nominal unit extent. Bins are assigned by their start and never clipped:
+    a bin straddling the boundary stays whole in the lower unit, so the split is
+    purely spatial bookkeeping and no uniform-speed time split is invented."""
+    from pyspark.sql import functions as F
+    start = F.col("sub_id") * F.lit(a.sub_length_m)
+    return (df.withColumn("unit_start_m", start)
+            .withColumn("unit_length_m",
+                        F.least(F.lit(a.sub_length_m), F.col(length_column) - start)))
+
+
+def road_units(links, a):
+    """Static road universe expanded to modeling units for exhaustive empty windows."""
+    from pyspark.sql import functions as F
+    if "link_length_m" not in links.columns:
+        raise ValueError("--links must include link_length_m: empty windows are per "
+                         "modeling unit and the unit grid cannot be derived without it")
+    roads = (links.select(*[F.col(k).cast("string").alias(k) for k in LINK_GROUP[:2]],
+                          F.col("link_length_m").cast("double").alias("link_length_m"))
+             .distinct())
+    if roads.where(~finite(F.col("link_length_m")) | (F.col("link_length_m") <= 0)).limit(1).count():
+        raise ValueError("--links link_length_m must be finite and positive")
+    last = (F.ceil(F.col("link_length_m") / a.sub_length_m) - 1).cast("int")
+    roads = roads.withColumn("sub_id", F.explode(F.sequence(F.lit(0), last)))
+    roads = unit_geometry(roads, a)
+    return (roads.withColumnRenamed("link_length_m", "roads_link_length_m")
+            .withColumnRenamed("unit_start_m", "roads_unit_start_m")
+            .withColumnRenamed("unit_length_m", "roads_unit_length_m"))
 
 
 def prepare_events(raw, a):
@@ -115,6 +158,11 @@ def prepare_events(raw, a):
           & F.col("observed").isin(0, 1)
           & (F.col("distance_m") / F.col("duration") <= a.max_speed))
     df = df.withColumn("_ok", F.coalesce(ok, F.lit(False)))
+    # This stage (parquet read + the caller's row expansion) is the expensive one
+    # and was recomputed from scratch by every check below. Cache it once; the
+    # checks and the dedup then read the same materialized rows.
+    from pyspark import StorageLevel
+    df = df.persist(StorageLevel.DISK_ONLY)
     audit = df.agg(F.count("*").alias("target_rows"),
                    F.sum(F.when(~F.col("_ok"), 1).otherwise(0)).alias("rejected_rows")).first().asDict()
     # Missing availability is not a speed outlier: fail rather than silently
@@ -123,12 +171,17 @@ def prepare_events(raw, a):
         raise ValueError("Missing/nonfinite available_ts on target rows; upstream audit required")
     good = df.where("_ok").drop("_ok")
     values = [k for k in good.columns if k not in KEY + ["available_ts"]]
-    variants = good.groupBy(*KEY).agg(F.countDistinct(F.struct(*values)).alias("n"))
-    if variants.where("n > 1").limit(1).count():
-        raise ValueError("Conflicting bin versions/components: normalize immutable events upstream")
     # Duplicate delivery of identical observations: first actual availability.
     events = good.groupBy(*(KEY + values)).agg(F.min("available_ts").alias("available_ts"))
     events = events.withColumn("event_id", F.sha2(F.to_json(F.struct(*KEY)), 256))
+    events = events.persist(StorageLevel.DISK_ONLY)
+    # Conflicting versions/components of one event key survive the dedup above as
+    # >1 row for that key -- equivalent to the old countDistinct-over-values
+    # check, but it reads the cached dedup result instead of rescanning df.
+    # Still fails before any write.
+    if events.groupBy(*KEY).count().where("count > 1").limit(1).count():
+        raise ValueError("Conflicting bin versions/components: normalize immutable events upstream")
+    df.unpersist()
     return events, {k: int(v or 0) for k, v in audit.items()}
 
 
@@ -145,31 +198,44 @@ def window_members(events, a):
     eligible = events.withColumn("_first", first).withColumn("_last", last).where("_first <= _last")
     members = (eligible.withColumn("anchor_ts", F.explode(F.sequence("_first", "_last", F.lit(stride))))
                .drop("_first", "_last"))
-    passes = members.select(*(GROUP + ["sample_id"])).distinct()
-    counts = passes.groupBy(*GROUP).agg(F.count("*").alias("n_passes_before_cap"))
+    passes = members.select(*(LINK_GROUP + ["sample_id"])).distinct()
+    # One row per pass. The capped join below, both of counts' aggregations, and
+    # the snapshots stage (which needs counts again) all read it -- without this
+    # cache the distinct shuffle over every expanded event runs once per reader.
+    from pyspark import StorageLevel
+    passes = passes.persist(StorageLevel.DISK_ONLY)
+    counts = passes.groupBy(*LINK_GROUP).agg(F.count("*").alias("n_passes_before_cap"))
     if a.max_passes:
-        rank = Window.partitionBy(*GROUP).orderBy(
+        rank = Window.partitionBy(*LINK_GROUP).orderBy(
             F.hash(F.lit(a.seed), F.col("sample_id")), F.col("sample_id"))
         passes = passes.withColumn("_rank", F.row_number().over(rank)).where(
             F.col("_rank") <= a.max_passes).drop("_rank")
-    counts = counts.join(passes.groupBy(*GROUP).agg(F.count("*").alias("n_passes_kept")), GROUP)
-    members = members.join(passes, GROUP + ["sample_id"], "inner")
-    members = members.withColumn("snapshot_id", F.sha2(F.to_json(F.struct(*GROUP)), 256))
+    counts = counts.join(passes.groupBy(*LINK_GROUP).agg(F.count("*").alias("n_passes_kept")),
+                         LINK_GROUP)
+    members = members.join(passes, LINK_GROUP + ["sample_id"], "inner")
     # Absolute geometry, never cumsum over surviving bins (which closes holes).
     members = members.withColumn("sub_id", F.floor(F.col("position_m") / a.sub_length_m).cast("int"))
+    members = unit_geometry(members, a).withColumn("snapshot_id", snapshot_id_expr())
     return members, counts
 
 
 def build_curves(members, a):
     from pyspark.sql import functions as F
-    curve_keys = ["snapshot_id"] + GROUP + ["sample_id", "sub_id"]
+    curve_keys = ["snapshot_id"] + UNIT_GROUP + ["sample_id"]
     fields = ["position_m", "bin_idx", "duration", "distance_m", "observed", "event_id",
               "bin_start_ts", "bin_end_ts", "available_ts"]
+    # size(bins) is just the group's row count, so validate it with a plain
+    # count: building and sorting every curve's array a second time just to read
+    # its length was the most expensive action in this job. Same condition, same
+    # failure, still before any write.
+    oversized = members.groupBy(*curve_keys).count().where(F.col("count") > a.max_bins)
+    if oversized.limit(1).count():
+        raise ValueError("A curve exceeds max-bins; adjust geometry/config, never silently truncate")
     curves = members.groupBy(*curve_keys).agg(
         F.sort_array(F.collect_list(F.struct(*fields))).alias("bins"),
-        F.max("link_length_m").alias("link_length_m"))
-    if curves.where(F.size("bins") > a.max_bins).limit(1).count():
-        raise ValueError("A curve exceeds max-bins; adjust geometry/config, never silently truncate")
+        F.max("link_length_m").alias("link_length_m"),
+        F.max("unit_start_m").alias("unit_start_m"),
+        F.max("unit_length_m").alias("unit_length_m"))
     # This is coverage of the selected observations, not future pass completion.
     return (curves.withColumn("length", F.size("bins"))
             .withColumn("available_distance_m", F.expr("aggregate(bins, 0.0D, (s,x) -> s+x.distance_m)")))
@@ -177,25 +243,34 @@ def build_curves(members, a):
 
 def snapshots(members, counts, links, spark, a):
     from pyspark.sql import functions as F
-    stats = members.groupBy(*GROUP).agg(
+    # Per-unit observations; passage counts stay per link and are joined down so a
+    # unit row also records how the cap was applied to its parent link.
+    stats = members.groupBy(*UNIT_GROUP).agg(
         F.count("*").alias("n_bin_observations"),
         F.sum("distance_m").alias("distance_observations_m"),
-        (F.sum("distance_m") / F.sum("duration")).alias("distance_over_time_speed"))
-    table = counts.join(stats, GROUP)
+        (F.sum("distance_m") / F.sum("duration")).alias("distance_over_time_speed"),
+        F.max("link_length_m").alias("link_length_m"),
+        F.max("unit_start_m").alias("unit_start_m"),
+        F.max("unit_length_m").alias("unit_length_m"))
+    table = stats.join(counts, LINK_GROUP)
     if links is not None:
         # Explicit static road universe is required for exhaustive empty windows.
-        roads = links.select("map_version", "target_link_id").distinct()
-        roads = roads.select(*[F.col(k).cast("string").alias(k) for k in roads.columns])
-        if members.select("map_version", "target_link_id").distinct().join(
-                roads, ["map_version", "target_link_id"], "left_anti").limit(1).count():
+        roads = road_units(links, a)
+        keys = ["map_version", "target_link_id"]
+        if members.select(*keys).distinct().join(roads, keys, "left_anti").limit(1).count():
             raise ValueError("Input events include roads outside --links")
         anchors = spark.range(a.anchor_start, a.anchor_end, a.stride_seconds).select(
             F.col("id").alias("anchor_ts"))
-        table = roads.crossJoin(anchors).join(table, GROUP, "left")
+        table = roads.crossJoin(anchors).join(table, UNIT_GROUP, "left")
+        # Empty units take their geometry from the static universe.
+        for column in ["link_length_m", "unit_start_m", "unit_length_m"]:
+            table = table.withColumn(
+                column, F.coalesce(F.col(column), F.col("roads_" + column)))
+        table = table.drop("roads_link_length_m", "roads_unit_start_m", "roads_unit_length_m")
     return (table.fillna(0, subset=["n_passes_before_cap", "n_passes_kept", "n_bin_observations",
-                                   "distance_observations_m"])
+                                    "distance_observations_m"])
             .withColumn("empty_flag", F.col("n_passes_kept") == 0)
-            .withColumn("snapshot_id", F.sha2(F.to_json(F.struct(*GROUP)), 256))
+            .withColumn("snapshot_id", snapshot_id_expr())
             .withColumn("lookback_seconds", F.lit(a.lookback_seconds)))
 
 
@@ -214,8 +289,7 @@ def main():
         if path.getFileSystem(spark._jsc.hadoopConfiguration()).exists(path):
             raise ValueError("Output already exists; choose a new version directory: " + a.out)
         raw = spark.read.parquet(*[p.strip() for p in a.inputs.split(",") if p.strip()])
-        events, audit = prepare_events(raw, a)
-        events = events.persist(StorageLevel.DISK_ONLY)
+        events, audit = prepare_events(raw, a)   # persisted DISK_ONLY inside
         members, counts = window_members(events, a)
         members = members.persist(StorageLevel.DISK_ONLY)
         if not a.links and not members.limit(1).count():
@@ -234,6 +308,8 @@ def main():
         meta = dict(vars(a), format=FORMAT, audit=audit, builder_sha256=builder_sha256,
                     availability="producer_supplied; causal contract requires upstream audit",
                     boundary="start>=anchor-W,end<anchor,available<=anchor",
+                    snapshot_unit="modeling_unit: sub_id=floor(position_m/sub_length_m), "
+                                  "bins assigned by start and never clipped",
                     snapshot_scope="road_universe" if a.links else "nonempty_only")
         spark.createDataFrame([(json.dumps(meta),)], "value string").coalesce(1).write.text(
             a.out + "/window_meta.json.d")

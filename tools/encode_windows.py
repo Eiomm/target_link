@@ -32,8 +32,10 @@ def main():
     if out.exists():
         p.error("output exists; choose a new filename")
     saved = torch.load(a.checkpoint, map_location="cpu", weights_only=True)
-    if saved.get("format") != "target_link_window_mae_v1":
-        raise ValueError("Require a window MAE checkpoint, not the old CurveMAE")
+    if saved.get("format") != "target_link_window_mae_v3":
+        raise ValueError("Require a v3 window MAE checkpoint: v1/v2 predate the design-doc "
+                         "bin features and the MASK-token decoder, so their state_dict is "
+                         "incompatible")
     model = WindowMAE(**saved["model_kwargs"]).to(a.device)
     model.load_state_dict(saved["model"])
     model.eval()
@@ -47,6 +49,7 @@ def main():
     loader = DataLoader(ds, batch_size=a.batch_size, collate_fn=collate_windows)
     schema = pa.schema([("snapshot_id", pa.string()), ("map_version", pa.string()),
                         ("target_link_id", pa.string()), ("anchor_ts", pa.int64()),
+                        ("sub_id", pa.int32()),
                         ("representation", pa.list_(pa.float32(), saved["model_kwargs"]["d_model"]))])
     out.parent.mkdir(parents=True, exist_ok=True)
     count = 0
@@ -54,8 +57,10 @@ def main():
         for b in loader:
             moved = {k: v.to(a.device) if torch.is_tensor(v) else v for k, v in b.items()}
             rep = model(moved)["representation"].cpu().tolist()
-            rows = [dict(snapshot_id=s, map_version=m, target_link_id=l, anchor_ts=t, representation=r)
-                    for s, m, l, t, r in zip(b["snapshot_ids"], b["map_versions"], b["link_ids"], b["anchor_ts"], rep)]
+            rows = [dict(snapshot_id=s, map_version=m, target_link_id=l, anchor_ts=t,
+                         sub_id=i, representation=r)
+                    for s, m, l, t, i, r in zip(b["snapshot_ids"], b["map_versions"],
+                                                b["link_ids"], b["anchor_ts"], b["sub_ids"], rep)]
             writer.write_table(pa.Table.from_pylist(rows, schema=schema))
             count += len(rows)
     print("[encode_windows] exported %d nonempty snapshots to %s" % (count, out))

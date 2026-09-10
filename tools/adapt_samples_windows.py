@@ -82,6 +82,11 @@ def adapt(raw, a):
     df = merged.withColumn("spatial_start_m",
                            F.coalesce(F.sum("distance_m").over(
                                w.rowsBetween(Window.unboundedPreceding, -1)), F.lit(0.0)))
+    # df carries both window functions plus the component merge -- by far the
+    # expensive part. Every later action (stats / closure / write) used to
+    # recompute it from the raw parquet; cache it once instead.
+    from pyspark import StorageLevel
+    df = df.persist(StorageLevel.DISK_ONLY)
     quality = (F.col("distance_m").isNotNull() & (F.col("distance_m") > 0)
                & ~F.isnan("distance_m") & ~F.isnan("bin_end_ts") & ~F.isnan("bin_start_ts")
                & ~F.isnan("spatial_start_m") & ~F.isnan("bin_size_m")
@@ -132,7 +137,11 @@ def main():
             raise ValueError("Output already exists; choose a new version directory: " + a.out)
         raw = spark.read.parquet(*[p.strip() for p in a.inputs.split(",") if p.strip()])
         events, audit = adapt(raw, a)
-        n = events.count()
+        # events is a projection of df.where(kept) with no further filtering, so
+        # the written row count is exactly the audit's kept count -- a separate
+        # count() would rescan the whole cached frame for a number already known
+        # (identity holds on the 25h run: 2296301711-9018711-133095514=rows).
+        n = audit["seg1_rows"] - audit["dropped_quality"] - audit["dropped_tail_no_fix"]
         (events.repartition(a.partitions, "sample_id").sortWithinPartitions(
             "map_version", "target_link_id", "sample_id", "bin_idx")
          .write.mode("errorifexists").parquet(a.out + "/events"))

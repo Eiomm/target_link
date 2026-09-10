@@ -65,7 +65,10 @@ def main():
     run("encode_windows.py", "--data", root / "corpus", "--checkpoint", root / "training/last.pt",
         "--out", root / "representations.parquet", "--start", 1320, "--end", 1440)
     exported = pq.read_table(root / "representations.parquet").to_pylist()
-    assert len(exported) == 4 and all(len(r["representation"]) == 16 for r in exported)
+    # 2 roads x 2 validation anchors x 2 modeling units (positions 0/30 and 210 of a
+    # 300m link), one representation per (modeling unit, anchor).
+    assert len(exported) == 8 and all(len(r["representation"]) == 16 for r in exported)
+    assert {r["sub_id"] for r in exported} == {0, 1}
     print("PASS: local SQL build, partial-bin boundaries, train/val, and representation export")
 
 

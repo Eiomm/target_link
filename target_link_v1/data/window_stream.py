@@ -24,8 +24,9 @@ class WindowDataset(IterableDataset):
         if len(hits) != 1:
             raise ValueError("Require a completed window corpus with one metadata file")
         self.meta = json.loads(Path(hits[0]).read_text())
-        if self.meta.get("format") != "target_link_windows_v1":
-            raise ValueError("Unsupported window format; old curve shards are not snapshots")
+        if self.meta.get("format") != "target_link_windows_v2":
+            raise ValueError("Unsupported window format; v1 snapshots are physical-link "
+                             "level and cannot be regrouped into modeling units")
         self.files = sorted(glob.glob(str(Path(directory) / "window_curves/part-*.parquet")))
         if not self.files:
             raise ValueError("No window_curves Parquet files")
@@ -41,7 +42,8 @@ class WindowDataset(IterableDataset):
                   for k in ["duration", "distance", "position", "age", "observed"]}
         valid = np.zeros((n, m), dtype=bool)
         lengths = np.zeros(n, dtype=np.int64)
-        link_lengths = np.zeros(n, dtype=np.float32)
+        unit_starts = np.zeros(n, dtype=np.float32)
+        unit_lengths = np.zeros(n, dtype=np.float32)
         anchor = rows[0]["anchor_ts"]
         w = self.meta["lookback_seconds"]
         pass_ids = {}
@@ -54,7 +56,8 @@ class WindowDataset(IterableDataset):
             if not 0 < len(bins) <= m:
                 raise ValueError("Invalid curve length; refusing silent truncation")
             lengths[j] = len(bins)
-            link_lengths[j] = row["link_length_m"]
+            unit_starts[j] = row["unit_start_m"]
+            unit_lengths[j] = row["unit_length_m"]
             for i, b in enumerate(bins):
                 if not (b["bin_start_ts"] >= anchor - w and b["bin_end_ts"] < anchor
                         and b["available_ts"] <= anchor):
@@ -68,10 +71,12 @@ class WindowDataset(IterableDataset):
                                                 self.age_bucket_seconds) * self.age_bucket_seconds / w
                 arrays["observed"][j, i] = b["observed"]
                 valid[j, i] = True
-        return dict(arrays, valid=valid, lengths=lengths, link_lengths=link_lengths,
+        return dict(arrays, valid=valid, lengths=lengths,
+                    unit_starts=unit_starts, unit_lengths=unit_lengths,
                     curve_pass=np.asarray(curve_pass, dtype=np.int64),
                     snapshot_id=rows[0]["snapshot_id"], anchor_ts=anchor,
-                    map_version=rows[0].get("map_version"), target_link_id=rows[0].get("target_link_id"))
+                    map_version=rows[0].get("map_version"), target_link_id=rows[0].get("target_link_id"),
+                    sub_id=rows[0].get("sub_id"))
 
     def __iter__(self):
         worker = get_worker_info()
@@ -103,7 +108,8 @@ class WindowDataset(IterableDataset):
 def collate_windows(items):
     """Flatten curves, but retain complete snapshot and passage membership."""
     tensors = {}
-    for k in ["duration", "distance", "position", "age", "observed", "valid", "lengths", "link_lengths"]:
+    for k in ["duration", "distance", "position", "age", "observed", "valid", "lengths",
+              "unit_starts", "unit_lengths"]:
         tensors[k] = torch.from_numpy(np.concatenate([x[k] for x in items], axis=0))
     tensors["curve_group"] = torch.repeat_interleave(
         torch.arange(len(items)), torch.tensor([len(x["lengths"]) for x in items]))
@@ -117,4 +123,5 @@ def collate_windows(items):
     tensors["anchor_ts"] = [x["anchor_ts"] for x in items]
     tensors["map_versions"] = [x.get("map_version") for x in items]
     tensors["link_ids"] = [x.get("target_link_id") for x in items]
+    tensors["sub_ids"] = [x.get("sub_id") for x in items]
     return tensors
