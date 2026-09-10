@@ -22,7 +22,7 @@ export OBS_DIR="observations_v2"     # 必须:v1 的 observations 没有 bin_pos
 
 # --- 训练:够跑通就行 --------------------------------------------------------
 export EPOCHS=30
-export MAX_BATCHES=-1
+export MAX_BATCHES=0
 export BATCH_SIZE=64
 export WORKERS=2
 export DEVICE=cuda

@@ -7,35 +7,21 @@ trajectory is a [50, 3] profile of (T_diff, ratio, observed) plus `bin_valid`.
 
     [50,3] bins + bin_valid -> TrajectoryEncoder -> r_k
     r_k + TimeEmbedding(delta_t)                  -> z_k
-    whole masked trajectories -> mask_token       -> z_k'
-    [CLS] + z' -> TrajectoryLevelTransformer      -> h_CLS, per-token state
-    level-2 state + (bin position, delta_t) -> decoder -> T_diff per bin
+    keep visible trajectory tokens only           -> z_visible
+    [CLS] + z_visible -> TrajectoryLevelTransformer -> h_CLS
+    h_CLS + (bin position, delta_t) -> decoder     -> T_diff per bin
 
 Choices worth naming, because they are what the smoke is meant to exercise:
 
-  * The mask unit is a whole trajectory and it is applied AFTER the level-1
-    encoder: a masked trajectory is never encoded, so its own profile cannot
-    leak into its own reconstruction. Only the visible trajectories and the CLS
-    can explain it.
-  * A masked trajectory's token is `mask_token + TimeEmbedding(delta_t)`. When
-    the hidden trajectory passed is given (it is not the prediction target);
-    what it did is not.
-  * The decoder reads the LEVEL-2 state, never the trajectory's own level-1
-    state. A level-1 skip connection would hand the decoder the answer straight
-    out of the encoder it is supposed to be summarised by -- the shortcut that
-    killed the CLS in the V2 window MAE (see models/window_mae.py). Passing
-    `ablate_aggregate=True` zeroes the level-2 state as a branch-death monitor:
+  * The mask unit is a whole trajectory. Level 2 receives only visible
+    trajectory tokens, so a hidden profile cannot leak into h_CLS.
+  * The decoder reads h_CLS, never the trajectory's own level-1 state. Passing
+    `ablate_aggregate=True` zeroes h_CLS as a branch-death monitor:
     if the loss gap collapses towards 0, the decoder is ignoring the CLS.
   * T_diff stays in seconds. It is never converted to speed -- on a fixed-length
     bin the crossing time already is the motion feature.
-  * `ratio` and `observed` are coverage and provenance, not motion. A bin whose
-    piece exists but whose T_diff is unknown keeps both, with a zeroed T_diff;
-    `bin_valid` is fed as a FOURTH channel so that zero cannot be read as
-    "0 seconds", and it is also the pooling weight. The attention mask is
-    presence (ratio > 0), NOT validity, so such a bin still contributes its
-    geometry -- only a true hole (the trajectory never crossed that 10m) is
-    invisible. Collapsing the two masks into one would silently delete the
-    reader's "invalid bins keep ratio/observed" contract.
+  * The feature axis remains exactly (T_diff, ratio, observed). `bin_valid` is
+    a separate attention and pooling mask and is never concatenated to x.
 """
 from __future__ import annotations
 
@@ -47,7 +33,6 @@ from target_link_v1.models.level2 import TrajectoryLevelTransformer
 
 N_BINS = 50        # 500m segment / 10m bin, the fixed spatial grid
 N_FEATURES = 3     # T_diff, ratio, observed
-I_RATIO = 1        # column of `ratio`: the presence indicator, see `forward`
 
 
 class TimeEmbedding(nn.Module):
@@ -71,7 +56,7 @@ class CellTrajectoryEncoder(nn.Module):
         super().__init__()
         self.n_bins = int(n_bins)
         self.bin_proj = nn.Sequential(
-            nn.Linear(N_FEATURES + 1, d_model), nn.GELU(),
+            nn.Linear(N_FEATURES, d_model), nn.GELU(),
             nn.Linear(d_model, d_model), nn.LayerNorm(d_model),
             nn.Dropout(dropout))
         self.pos_emb = nn.Embedding(self.n_bins, d_model)
@@ -87,23 +72,13 @@ class CellTrajectoryEncoder(nn.Module):
         if n != self.n_bins:
             raise ValueError("trajectory width %d != n_bins %d" % (n, self.n_bins))
         pos = self.pos_emb(torch.arange(n, device=x.device))
-        # bin_valid rides along as a 4th channel: it is what tells the encoder
-        # that a zeroed T_diff is an unknown time, not a very fast one.
-        h = self.bin_proj(torch.cat([x, bin_valid.to(x.dtype).unsqueeze(-1)], -1)) + pos
-        # Presence, not validity: a bin whose piece exists but whose time is
-        # unknown still carries ratio/observed, so it attends (with the channel
-        # above marking it). Presence == ratio > 0 holds because every piece
-        # carries ratio_pct >= 1 and the reader writes an absent bin as all-zero
-        # -- if the reader ever stops zeroing an absent bin's ratio, this mask
-        # silently changes meaning and must be plumbed through as its own field.
-        present = x[:, :, I_RATIO] > 0.0
+        h = self.bin_proj(x) + pos
         # PyTorch attention produces NaN when every key is masked. Padding
         # trajectories use a harmless temporary key and are zeroed by pooling.
-        safe = present.clone()
+        safe = bin_valid.clone()
         empty = ~safe.any(1)
         safe[empty, 0] = True
         h = self.encoder(h, src_key_padding_mask=~safe)
-        # ... while r_k averages only bins whose T_diff is trustworthy.
         m = bin_valid.to(x.dtype).unsqueeze(-1)
         return self.norm((h * m).sum(1) / m.sum(1).clamp_min(1.0))
 
