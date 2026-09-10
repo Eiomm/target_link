@@ -24,7 +24,7 @@ Run local:
   env -u SPARK_HOME ... python tools/build_curves_spark.py \
       --inputs 'data/raw_hdfs/event_hour=2026082007/part-*.parquet' \
       --out data/curves_spark/smoke3 --master 'local[8]'
-Run yarn: three-tier wrapper as scripts/submit_curves_yarn.sh.
+Run yarn: three-tier wrapper as legacy/scripts/submit_curves_yarn.sh.
 """
 from __future__ import annotations
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # New causal-window pipeline. MODE=dry prints only; no DAY requirement.
 set -euo pipefail
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
+# rest of the code stayed in place (legacy/README.md)
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 MODE="${MODE:-dry}"
 : "${INPUT_GLOB:?comma-separated input Parquet paths required}"
@@ -10,12 +12,12 @@ MODE="${MODE:-dry}"
 : "${ANCHOR_END:?exclusive UTC epoch seconds required}"
 args=(tools/build_windows_spark.py --inputs "$INPUT_GLOB" --out "$OUT_DIR"
   --anchor-start "$ANCHOR_START" --anchor-end "$ANCHOR_END"
-  --lookback-seconds "${LOOKBACK_SECONDS:-600}" --stride-seconds "${STRIDE_SECONDS:-60}"
+  --lookback-seconds "${LOOKBACK_SECONDS:-600}" --stride-seconds "${STRIDE_SECONDS:-600}"
   --max-passes "${MAX_PASSES:-0}" --seed "${CAP_SEED:-42}"
   --availability-column "${AVAILABILITY_COLUMN:-available_ts}"
   --position-column "${POSITION_COLUMN:-spatial_start_m}"
   --time-source "${TIME_SOURCE:-explicit}" --sub-length-m "${SUB_LENGTH_M:-200}"
-  --max-bins "${MAX_BINS:-40}" --partitions "${CURVES_PARTITIONS:-200}"
+  --max-bins "${MAX_BINS:-21}" --partitions "${CURVES_PARTITIONS:-200}"
   --shuffle-partitions "${SHUFFLE_PARTITIONS:-800}")
 [[ -n "${LINKS:-}" ]] && args+=(--links "$LINKS")
 case "$MODE" in

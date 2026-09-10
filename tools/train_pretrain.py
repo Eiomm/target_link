@@ -1,8 +1,8 @@
 """Train the stage-1 self-supervised CurveMAE (repV2 §4.1).
 
 Usage:
-  python tools/train_pretrain.py --config configs/pretrain.yaml --overfit  # wiring
-  python tools/train_pretrain.py --config configs/pretrain.yaml --seeds 0  # real run
+  python tools/train_pretrain.py --config legacy/configs/pretrain.yaml --overfit  # wiring
+  python tools/train_pretrain.py --config legacy/configs/pretrain.yaml --seeds 0  # real run
 
 Monitoring per log interval (repV2 §4.1, all three must move):
   - val L_rec (fresh masks) + train loss;
@@ -253,7 +253,7 @@ def run(cfg: Dict, seed: int, overfit: bool, device: str) -> Dict:
 if __name__ == "__main__":
     torch.set_num_threads(8)  # pod default 64 thrashes small CPU ops (span_mask)
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--config", default="configs/pretrain.yaml")
+    ap.add_argument("--config", default="legacy/configs/pretrain.yaml")
     ap.add_argument("--seeds", default="0")
     ap.add_argument("--corpus", default=None, help="override cfg data.corpus (job entrypoint)")
     ap.add_argument("--overfit", action="store_true")

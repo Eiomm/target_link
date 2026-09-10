@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Luban k8s-job entrypoint (CPU, no GPU needed) for one day's profiles build.
-# Pattern: scripts/submit_pretrain_job.sh (same activation/preflight style).
+# Pattern: legacy/scripts/submit_pretrain_job.sh (same activation/preflight style).
 #
 # Per-day flow: hdfs get the day's ingest outputs (bins_shards ~10-15GB/day)
 # -> run tools/build_profiles.py UNCHANGED on local paths (streaming numpy,

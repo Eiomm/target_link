@@ -10,7 +10,9 @@
 #   MODE=yarn bash scripts/submit_week_stats_yarn.sh
 set -euo pipefail
 
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# legacy/scripts/ -> repo root: only these entrypoints moved, tools/ and the
+# rest of the code stayed in place (legacy/README.md)
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 
 MODE="${MODE:-yarn}"

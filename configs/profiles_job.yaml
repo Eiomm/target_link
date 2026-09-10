@@ -1,7 +1,7 @@
 # One-day profiles build inside the luban k8s-job (scripts/submit_profiles_job.sh).
 # input.dir / output.dir are placeholders — the entrypoint overrides both via
 # --input-dir (hdfs-fetched local dir) and --output-dir (NFS products dir).
-# Params mirror configs/profiles_smoke_spark3.yaml exactly (same contract).
+# Params mirror legacy/configs/profiles_smoke_spark3.yaml exactly (same contract).
 input:
   dir: /PLACEHOLDER
   samples: samples.parquet
