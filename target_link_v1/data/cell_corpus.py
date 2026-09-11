@@ -167,7 +167,10 @@ class CellCorpusDataset(IterableDataset):
         g = pc.concat_tables(gt) if len(gt) > 1 else gt[0]
         o = pc.concat_tables(ot) if len(ot) > 1 else ot[0]
         cid = o["cell_id"].to_numpy(zero_copy_only=False).astype(np.int64)
-        if cid.size and np.any(np.diff(cid) < 0):
+        # Do not use np.diff(cid) here: signed int64 subtraction can overflow
+        # across the xxhash64 positive/negative boundary, hiding a real descent
+        # or inventing one on an ascent. Direct comparison cannot overflow.
+        if cid.size > 1 and np.any(cid[1:] < cid[:-1]):
             raise ValueError("observations partition is not sorted by cell_id")
         flat = {k: _flat(o[c]) for k, c in _PIECE_COLS}
         flat["off"] = _offsets(o["T_diff"])

@@ -129,3 +129,22 @@ def test_groups_per_partition_caps_each_partition(tmp_path):
         CellCorpusDataset(
             tmp_path, obs_dir="observations", groups_dir="training_groups",
             groups_per_partition=0)
+
+
+def test_reader_sort_guard_does_not_overflow_at_int64_boundary(tmp_path):
+    """A max-positive -> min-negative descent was invisible to np.diff(int64)."""
+    _synthetic_corpus(tmp_path)
+    path = next((tmp_path / "observations").rglob("*.parquet"))
+    # Read the physical file directly; pq.read_table(path) also discovers the
+    # hive day/bucket directory columns and would persist them into the file.
+    table = pq.ParquetFile(path).read()
+    cell_id = np.array([np.iinfo(np.int64).max] * 4 +
+                       [np.iinfo(np.int64).min] * 5, dtype=np.int64)
+    table = table.set_column(table.schema.get_field_index("cell_id"), "cell_id",
+                             pa.array(cell_id))
+    pq.write_table(table, path)
+
+    ds = CellCorpusDataset(tmp_path, obs_dir="observations",
+                           groups_dir="training_groups", shuffle_groups=False)
+    with pytest.raises(ValueError, match="not sorted by cell_id"):
+        list(ds)

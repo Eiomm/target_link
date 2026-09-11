@@ -20,8 +20,15 @@ parts_for_days() {
 export TRAIN_PARTS="$(parts_for_days 20260817 20260818 20260819 20260820 20260821)"
 export VAL_PARTS="$(parts_for_days 20260822)"
 export DATA="$REPO/runtime/cell_weekend_tune_20260817_22"
-export OBS_DIR=observations_v3
+# The local v2 copy has had its 21 bad partitions repaired and independently
+# verified. HDFS v2/v3 are still untrusted; FETCH must therefore reuse this
+# complete local copy rather than force a download.
+export OBS_DIR=observations_v2
 export GROUPS_DIR=training_groups_k3
+# Never touch the untrusted HDFS v2 during Stage A. The preflight below will
+# independently reject a missing, incomplete, or unsorted local partition.
+export FETCH=0
+export FORCE_FETCH=0
 
 # Sample every day/hash-bucket instead of stopping after a partition prefix:
 # 5 days x 128 buckets x 4096 groups = at most 2.62M groups/epoch.

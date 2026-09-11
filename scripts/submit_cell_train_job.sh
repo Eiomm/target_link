@@ -175,7 +175,9 @@ for side in ("train", "val"):
             cid = o["cell_id"].to_numpy(zero_copy_only=False)
             # the reader locates a cell's rows with one searchsorted, so the
             # whole partition, including file boundaries, must be cell_id-sorted
-            if cid.size > 1 and bool((np.diff(cid) < 0).any()):
+            # Direct comparison is required: np.diff(int64) can overflow when
+            # signed xxhash64 values cross between the positive/negative range.
+            if cid.size > 1 and bool((cid[1:] < cid[:-1]).any()):
                 sys.exit("%s/%s/%s: cell_id is not sorted across %d parquet file(s); "
                          "CellCorpusDataset requires it" % (side, day, bucket, len(of)))
             bp = pc.list_flatten(o["bin_pos"]).to_numpy(zero_copy_only=False)

@@ -4,6 +4,14 @@
 # compatible and do not need to be rebuilt.
 set -euo pipefail
 
+# v3 completed as a Spark job but failed the persisted-order acceptance check
+# on large partitions. Keep this entrypoint only for controlled reproduction;
+# an accidental rerun would create another corpus that the reader must reject.
+if [[ "${ALLOW_BROKEN_V3_REPRO:-0}" != "1" ]]; then
+  echo "observations_v3 is rejected; set ALLOW_BROKEN_V3_REPRO=1 only for a controlled reproduction" >&2
+  exit 2
+fi
+
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export MODE=yarn
 export STAGES=obs

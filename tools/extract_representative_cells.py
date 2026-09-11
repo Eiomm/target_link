@@ -3,7 +3,9 @@
 The output has two layers:
   link_bin_window_stats/  all selected links, every observed 10-minute window, bin stats
   sampled_observations/   two windows/hour, <=N deterministic trajectories/cell
-plus selected_links/ and manifest.json.d/.  Row order is deliberately irrelevant.
+plus selected_links/, selected_link_days/, and manifest.json.d/.  A physical link
+is selected by target_link_id alone: map_version rotates during the week and is
+retained as a per-day observation attribute.  Row order is deliberately irrelevant.
 """
 from __future__ import annotations
 
@@ -27,6 +29,11 @@ def parse_slots(value):
 
 def tier_quotas(total, tiers=4):
     return [total // tiers + int(i < total % tiers) for i in range(tiers)]
+
+
+def selection_keys():
+    """Stable physical-link key used for cross-day eligibility and filtering."""
+    return ["target_link_id"]
 
 
 def parser():
@@ -76,7 +83,7 @@ def main():
     spark.sparkContext.setLogLevel("WARN")
     mode = "overwrite" if a.overwrite else "errorifexists"
     root, out = a.corpus.rstrip("/"), a.out.rstrip("/")
-    keys = ["map_version", "target_link_id"]
+    keys = selection_keys()
 
     # Select a fixed link panel for the whole week. Quartiles are computed only
     # among links with enough temporal support to be useful for visualisation.
@@ -91,7 +98,10 @@ def main():
         F.countDistinct("day").alias("n_active_days"),
         F.countDistinct(F.pmod(F.floor(F.col("window") / 3600) + 8, 24))
         .alias("n_hour_slots"),
-        (F.max("seg_idx") + 1).alias("n_segments")))
+        F.countDistinct("seg_idx").alias("n_segments"),
+        F.countDistinct("map_version").alias("n_map_versions"),
+        F.sort_array(F.collect_set(F.col("map_version").cast("string")))
+        .alias("map_versions")))
     candidates = link_stats.where(
         (F.col("n_observations") >= a.min_observations) &
         (F.col("n_active_days") >= a.min_active_days) &
@@ -107,11 +117,11 @@ def main():
             .when(F.col("n_observations") <= q[2], 2).otherwise(3))
     ranked = (candidates.withColumn("volume_tier", tier)
               .withColumn("pick_hash", F.xxhash64(F.concat_ws(
-                  "|", F.lit(str(a.seed)), F.col("map_version"), F.col("target_link_id")))))
+                  "|", F.lit(str(a.seed)), F.col("target_link_id")))))
     selected_parts = []
     for i, quota in enumerate(tier_quotas(a.n_links)):
         selected_parts.append(ranked.where(F.col("volume_tier") == i)
-                              .orderBy("pick_hash", "map_version", "target_link_id")
+                              .orderBy("pick_hash", "target_link_id")
                               .limit(quota))
     selected_links = selected_parts[0]
     for part in selected_parts[1:]:
@@ -121,11 +131,27 @@ def main():
     if actual_links != a.n_links:
         raise SystemExit("activity tiers produced %d/%d links; relax thresholds" %
                          (actual_links, a.n_links))
-    selected_links.coalesce(1).write.mode(mode).option("header", True).csv(
-        out + "/selected_links")
+    (selected_links.withColumn("map_versions", F.to_json("map_versions"))
+     .coalesce(1).write.mode(mode).option("header", True).csv(
+         out + "/selected_links"))
 
     selected_cells = (cells.join(F.broadcast(selected_links.select(*keys)), keys, "inner")
                       .persist(StorageLevel.MEMORY_AND_DISK))
+
+    # A link can have multiple map versions even within one day.  Keep the
+    # exact day/version membership as rows instead of pretending that the
+    # selected physical link has one fixed map_version for the whole week.
+    selected_link_days = (selected_cells.groupBy("target_link_id", "day").agg(
+        F.sort_array(F.collect_set(F.col("map_version").cast("string")))
+        .alias("map_versions"),
+        F.sum("K").alias("n_observations"),
+        F.count(F.lit(1)).alias("n_cells"),
+        F.sum(F.when(F.col("K") >= 3, 1).otherwise(0)).alias("n_cells_k_ge_3"))
+        .withColumn("cell_ratio_k_ge_3",
+                    F.col("n_cells_k_ge_3") / F.col("n_cells"))
+        .withColumn("map_versions", F.to_json("map_versions")))
+    selected_link_days.coalesce(1).write.mode(mode).option("header", True).csv(
+        out + "/selected_link_days")
 
     # HDFS v2's row order is untrusted, but its row set is intact. This job uses
     # relational joins/groupBy only and never relies on physical order.
@@ -194,7 +220,9 @@ def main():
         "format": "target_link_representative_extract_v1",
         "corpus": root, "observations": a.obs_dir, "days": days,
         "n_links": actual_links, "seed": a.seed,
-        "selection": {"min_observations": a.min_observations,
+        "selection": {"key": "target_link_id",
+                      "map_version_semantics": "per-day attribute, not a cross-day key",
+                      "min_observations": a.min_observations,
                       "min_active_days": a.min_active_days,
                       "min_hour_slots": a.min_hour_slots,
                       "min_active_hours": a.min_active_hours,

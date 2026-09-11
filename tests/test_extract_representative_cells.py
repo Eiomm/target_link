@@ -27,6 +27,10 @@ def test_tier_quotas_are_balanced_and_exact():
     assert max(extract.tier_quotas(63)) - min(extract.tier_quotas(63)) == 1
 
 
+def test_cross_day_selection_uses_stable_physical_link_key():
+    assert extract.selection_keys() == ["target_link_id"]
+
+
 def test_parser_coverage_defaults_are_week_wide():
     args = extract.parser().parse_args(["--corpus", "hdfs://c/corpus", "--out", "hdfs://c/out"])
     assert args.min_active_days == 7
