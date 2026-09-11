@@ -154,22 +154,30 @@ for side in ("train", "val"):
         if o_b != g_b:
             sys.exit("%s/%s: buckets differ: %s vs %s" % (side, day, o_b, g_b))
         for bucket in o_b:
-            of = glob.glob("%s/%s/%s/%s/%s/*.parquet" % (data, side, obs_dir, day, bucket))
-            gf = glob.glob("%s/%s/%s/%s/%s/*.parquet" % (data, side, grp_dir, day, bucket))
-            if len(of) != len(gf):
-                sys.exit("%s/%s/%s: file counts differ" % (side, day, bucket))
+            of = sorted(glob.glob("%s/%s/%s/%s/%s/*.parquet" %
+                                  (data, side, obs_dir, day, bucket)))
+            gf = sorted(glob.glob("%s/%s/%s/%s/%s/*.parquet" %
+                                  (data, side, grp_dir, day, bucket)))
+            if not of or not gf:
+                sys.exit("%s/%s/%s: observations or groups parquet is missing" %
+                         (side, day, bucket))
             n_obs += len(of); n_grp += len(gf)
-            schema_check(of[0], obs_dir, OBS_SCALAR, OBS_LIST)
-            schema_check(gf[0], grp_dir, GRP_SCALAR, GRP_LIST)
-            o = pq.read_table(of[0], columns=["cell_id", "sample_id", "dt", "T_diff",
-                                              "valid", "bin_pos"])
-            g = pq.read_table(gf[0], columns=["group_id", "cell_id", "K", "group_size",
-                                              "sample_ids"])
+            for path in of:
+                schema_check(path, obs_dir, OBS_SCALAR, OBS_LIST)
+            for path in gf:
+                schema_check(path, grp_dir, GRP_SCALAR, GRP_LIST)
+            ots = [pq.read_table(path, columns=["cell_id", "sample_id", "dt", "T_diff",
+                                                       "valid", "bin_pos"]) for path in of]
+            gts = [pq.read_table(path, columns=["group_id", "cell_id", "K", "group_size",
+                                                       "sample_ids"]) for path in gf]
+            o = pa.concat_tables(ots) if len(ots) > 1 else ots[0]
+            g = pa.concat_tables(gts) if len(gts) > 1 else gts[0]
             cid = o["cell_id"].to_numpy(zero_copy_only=False)
             # the reader locates a cell's rows with one searchsorted, so the
-            # partition must be written cell_id-sorted
+            # whole partition, including file boundaries, must be cell_id-sorted
             if cid.size > 1 and bool((np.diff(cid) < 0).any()):
-                sys.exit("%s: cell_id is not sorted; CellCorpusDataset requires it" % of[0])
+                sys.exit("%s/%s/%s: cell_id is not sorted across %d parquet file(s); "
+                         "CellCorpusDataset requires it" % (side, day, bucket, len(of)))
             bp = pc.list_flatten(o["bin_pos"]).to_numpy(zero_copy_only=False)
             if bp.size and (bp.min() < 0 or bp.max() > 49):
                 sys.exit("%s: bin_pos outside [0,49]: [%d,%d]"

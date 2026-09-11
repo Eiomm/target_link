@@ -174,7 +174,11 @@ def _run(a):
 
         check(out, "obs")
         (out.repartition(a.obs_partitions, "day", "bucket")
-            .sortWithinPartitions("cell_id", "sample_id")
+            # Dynamic partition writes require day/bucket as the leading sort
+            # keys.  If they are omitted Spark may insert its own
+            # sort(day,bucket), which does not preserve the cell_id order
+            # needed by CellCorpusDataset.searchsorted.
+            .sortWithinPartitions("day", "bucket", "cell_id", "sample_id")
             .write.mode("overwrite").partitionBy("day", "bucket")
             .option("maxRecordsPerFile", a.max_records_per_file)
             .parquet(f"{a.out}/{a.obs_dir}"))
@@ -271,7 +275,7 @@ def _run(a):
                   .withColumn("bucket", bucket_of("cell_id")))
         check(groups, "groups")
         (groups.repartition(a.obs_partitions, "day", "bucket")
-            .sortWithinPartitions("cell_id", "group_idx")
+            .sortWithinPartitions("day", "bucket", "cell_id", "group_idx")
             .write.mode("overwrite").partitionBy("day", "bucket")
             .option("maxRecordsPerFile", a.max_records_per_file)
             .parquet(f"{a.out}/{a.groups_dir}"))

@@ -21,7 +21,7 @@ parts_for_days() {
 export TRAIN_PARTS="$(parts_for_days 20260817 20260818 20260819 20260820 20260821 20260822)"
 export VAL_PARTS="$(parts_for_days 20260823)"
 export DATA="$REPO/runtime/cell_weekend_final_20260817_23"
-export OBS_DIR=observations_v2
+export OBS_DIR=observations_v3
 export GROUPS_DIR=training_groups_k3
 
 # These must match the recipe selected in Stage A. Sunday is the held-out test.
