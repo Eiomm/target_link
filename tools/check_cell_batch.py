@@ -17,6 +17,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -24,9 +25,10 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 import torch
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from target_link_v1.data.cell_corpus import (  # noqa: E402
     CellCorpusDataset, collate_cells)
+from target_link_v1.models.cell_mae import reconstruction_mask  # noqa: E402
 
 _OBS = ["cell_id", "sample_id", "dt", "T_diff", "ratio_pct", "observed",
         "valid", "bin_pos"]
@@ -36,9 +38,11 @@ def parse_args():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--root", required=True)
     p.add_argument("--obs-dir", default="observations_v2")
+    p.add_argument("--groups-dir", default="training_groups_k3")
     p.add_argument("--days", default=None, help="comma-separated, default all")
     p.add_argument("--batch", type=int, default=4, help="groups in the batch")
     p.add_argument("--epoch", type=int, default=0)
+    p.add_argument("--m-max", type=int, default=16)
     return p.parse_args()
 
 
@@ -90,8 +94,8 @@ def refold(ds, item):
 def main():
     a = parse_args()
     days = None if not a.days else [d.strip() for d in a.days.split(",")]
-    ds = CellCorpusDataset(a.root, obs_dir=a.obs_dir, days=days, seed=0,
-                           epoch=a.epoch)
+    ds = CellCorpusDataset(a.root, obs_dir=a.obs_dir, groups_dir=a.groups_dir,
+                           days=days, seed=0, epoch=a.epoch, m_max=a.m_max)
     print("corpus: %d (day,bucket) partitions, %d bins, m_max=%d"
           % (ds.n_partitions(), ds.n_bins, ds.m_max))
     it = iter(ds)
@@ -105,7 +109,8 @@ def main():
              b["bin_valid"].dtype, tuple(b["traj_valid"].shape), b["traj_valid"].dtype,
              tuple(b["delta_t"].shape), b["delta_t"].dtype,
              tuple(b["mae_mask"].shape), b["mae_mask"].dtype))
-    check((B, M, NB, F) == (a.batch, ds.m_max, ds.n_bins, 3), "batch is [B,16,50,3]")
+    check((B, M, NB, F) == (a.batch, ds.m_max, ds.n_bins, 3),
+          "batch is [B,%d,%d,3]" % (ds.m_max, ds.n_bins))
     check(b["x"].dtype == b["delta_t"].dtype == torch.float32 and
           b["bin_valid"].dtype == b["traj_valid"].dtype ==
           b["mae_mask"].dtype == torch.bool,
@@ -115,7 +120,8 @@ def main():
     sizes = np.array([len(it["sample_ids"]) for it in items])
     Ks = np.array([it["K"] for it in items])
     print("   group sizes %s   K %s" % (sizes.tolist(), Ks.tolist()))
-    check(bool((sizes >= 4).all() and (sizes <= M).all()), "4 <= size <= 16")
+    check(bool((sizes >= 3).all() and (sizes <= M).all()),
+          "3 <= size <= m_max")
     check(bool((sizes <= Ks).all()), "size <= K (K>16 must be split)")
     check(bool((Ks[sizes < M] >= sizes[sizes < M]).all()), "no group over K")
     pad = torch.ones((B, M), dtype=torch.bool)
@@ -129,11 +135,13 @@ def main():
     print("\n[3] bin / trajectory masks")
     nb = b["bin_valid"].sum(-1)
     tv = int(b["traj_valid"].sum())
+    check(tv > 0, "batch contains at least one valid trajectory")
     print("   valid bins per trajectory: min %d max %d mean %.2f"
           % (int(nb[b["traj_valid"]].min()), int(nb.max()),
              float(nb[b["traj_valid"]].float().mean())))
     check(bool((nb[b["traj_valid"]] >= 1).all()), "every valid trajectory has >=1 bin")
-    check(bool(b["traj_valid"][~pad].all()), "every real trajectory has >=1 valid bin")
+    check(bool((b["traj_valid"] == b["bin_valid"].any(-1)).all()),
+          "traj_valid exactly matches whether a trajectory has a valid bin")
     check(bool((nb[~b["traj_valid"]] == 0).all()), "invalid trajectory has no bins")
     # only T_diff is gated on the mask: an invalid bin may still carry the
     # geometry (ratio) and the GPS flag (observed)
@@ -161,6 +169,9 @@ def main():
     exp = np.minimum(np.maximum(1, np.round(0.5 * nv).astype(int)), nv - 2)
     check(bool((nm[~thin] == exp[~thin]).all()), "masked ~= 50%, with >=2 visible")
     check(bool(((nv - nm)[~thin] >= 2).all()), "at least two trajectories visible")
+    target = reconstruction_mask(b)
+    check(bool((target == (b["mae_mask"].unsqueeze(-1) & b["bin_valid"])).all()),
+          "reconstruction mask is masked trajectories' valid bins")
 
     print("\n[6] mask reproducibility (same epoch) and epoch sensitivity")
     again = collate_cells(items, epoch=a.epoch)

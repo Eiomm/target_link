@@ -131,6 +131,18 @@ def test_groups_per_partition_caps_each_partition(tmp_path):
             groups_per_partition=0)
 
 
+def test_max_groups_caps_the_dataset(tmp_path):
+    _synthetic_corpus(tmp_path)
+    ds = CellCorpusDataset(
+        tmp_path, obs_dir="observations", groups_dir="training_groups",
+        shuffle_groups=False, max_groups=1)
+    assert [item["group_id"] for item in ds] == ["g101"]
+    with pytest.raises(ValueError, match="max_groups"):
+        CellCorpusDataset(
+            tmp_path, obs_dir="observations", groups_dir="training_groups",
+            max_groups=0)
+
+
 def test_reader_sort_guard_does_not_overflow_at_int64_boundary(tmp_path):
     """A max-positive -> min-negative descent was invisible to np.diff(int64)."""
     _synthetic_corpus(tmp_path)

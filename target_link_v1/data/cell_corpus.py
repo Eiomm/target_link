@@ -34,12 +34,14 @@ cut it away) is invalid and its features are zero -- the same "gap" convention
 the pretrain encoder already uses for missing observations.
 
 Whole-trajectory MAE masking (50%, pinned) is produced here, not in the model:
-`mae_mask` marks whole trajectories and the model replaces them with its mask
-token. It is drawn per group from (epoch, group_id), so an epoch is
+`mae_mask` marks trajectories excluded from Level 2 and the group-bin context.
+The exact bins used by the reconstruction loss are derived through one shared
+helper as `mae_mask[..., None] & bin_valid`. The mask is drawn per group from
+`(epoch, group_id)`, so an epoch is
 reproducible and a re-run of the same epoch is identical; call `set_epoch`
-between epochs. Groups with fewer than two valid trajectories are left
-unmasked -- with K_min=3 that is a corner case, but masking the only visible
-trajectory would leave the encoder nothing to attend to.
+between epochs. Groups with fewer than three valid trajectories are left
+unmasked because the policy requires at least one hidden and two visible
+trajectories.
 """
 from __future__ import annotations
 
@@ -146,6 +148,8 @@ class CellCorpusDataset(IterableDataset):
         self.max_groups = max_groups
         self.groups_per_partition = groups_per_partition
         self.m_max, self.n_bins = int(m_max), int(n_bins)
+        if self.max_groups is not None and self.max_groups <= 0:
+            raise ValueError("max_groups must be positive or None")
         if self.groups_per_partition is not None and self.groups_per_partition <= 0:
             raise ValueError("groups_per_partition must be positive or None")
 
@@ -255,6 +259,8 @@ class CellCorpusDataset(IterableDataset):
     def __iter__(self):
         worker = get_worker_info()
         wid, nw = (worker.id, worker.num_workers) if worker else (0, 1)
+        if worker is not None and self.max_groups is not None:
+            raise ValueError("max_groups is only supported with num_workers=0")
         # every worker takes the SAME partition permutation, then disjoint
         # indices, so sharding stays balanced without a barrier
         # A capped epoch should not revisit the same leading partitions forever.

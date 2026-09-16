@@ -16,7 +16,9 @@ import torch
 from target_link_v1.models.cell_mae import (
     CellMAE,
     masked_reconstruction_loss,
+    reconstruction_error_sums,
     reconstruction_loss_by_group,
+    reconstruction_mask,
 )
 
 B, M, N = 2, 4, 50
@@ -182,9 +184,9 @@ def reference_loss(out, batch):
     the implementation: Huber over the bins of MASKED trajectories that have a
     known T_diff; equal weight per group; a group with nothing to reconstruct is
     dropped, never counted as a zero."""
-    mask = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]
+    mask = reconstruction_mask(batch)
     err = torch.nn.functional.huber_loss(out["prediction"], out["target"],
-                                         reduction="none")
+                                         reduction="none").detach()
     per_group = []
     for b in range(mask.shape[0]):
         rows = []
@@ -199,8 +201,51 @@ def reference_loss(out, batch):
 
 def test_loss_matches_the_documented_rule(model):
     a = make_batch()
-    got = float(masked_reconstruction_loss(model(a), a))
-    assert got == pytest.approx(reference_loss(model(a), a), rel=1e-5)
+    output = model(a)
+    got = float(masked_reconstruction_loss(output, a).detach())
+    assert got == pytest.approx(reference_loss(output, a), rel=1e-5)
+
+
+def test_reconstruction_mask_is_masked_and_valid_bins_only():
+    batch = make_batch()
+    expected = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]
+    torch.testing.assert_close(reconstruction_mask(batch), expected)
+
+
+@pytest.mark.parametrize("transform", ["raw", "log1p"])
+def test_reported_errors_are_in_seconds_and_use_reconstruction_mask(transform):
+    batch = make_batch()
+    prediction_s = torch.full((B, M, N), 4.0)
+    target_s = torch.full((B, M, N), 2.0)
+    output = {"prediction": prediction_s, "target": target_s}
+    if transform == "log1p":
+        output = {name: torch.log1p(value) for name, value in output.items()}
+    absolute, squared, count = reconstruction_error_sums(output, batch, transform)
+    expected = int(reconstruction_mask(batch).sum())
+    assert count == expected
+    assert float(absolute) == pytest.approx(2.0 * expected)
+    assert float(squared) == pytest.approx(4.0 * expected)
+
+
+def test_seconds_metrics_use_float64_for_large_log_predictions():
+    batch = make_batch()
+    output = {"prediction": torch.full((B, M, N), 100.0),
+              "target": torch.zeros(B, M, N)}
+    absolute, squared, count = reconstruction_error_sums(output, batch, "log1p")
+    assert count > 0
+    assert absolute.dtype == squared.dtype == torch.float64
+    assert torch.isfinite(absolute) and torch.isfinite(squared)
+
+
+def test_nan_outside_reconstruction_mask_does_not_poison_loss(model):
+    batch = make_batch()
+    output = model(batch)
+    expected = masked_reconstruction_loss(output, batch)
+    mask = reconstruction_mask(batch)
+    with_nan = dict(output)
+    with_nan["prediction"] = torch.where(
+        mask, output["prediction"], torch.full_like(output["prediction"], float("nan")))
+    torch.testing.assert_close(masked_reconstruction_loss(with_nan, batch), expected)
 
 
 def test_nothing_to_reconstruct_is_dropped_not_zeroed(model):
@@ -220,7 +265,8 @@ def test_per_group_loss_keeps_empty_groups_out(model):
     loss, has = reconstruction_loss_by_group(out, a)
     assert loss.shape == (B,)
     assert has.tolist() == [True, False]
-    assert float(masked_reconstruction_loss(out, a)) == pytest.approx(float(loss[0]))
+    actual = float(masked_reconstruction_loss(out, a).detach())
+    assert actual == pytest.approx(float(loss[0].detach()))
 
 
 def test_backward_is_finite(model):

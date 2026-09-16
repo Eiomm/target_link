@@ -157,6 +157,9 @@ def _validate_groups(observations, groups) -> dict:
     unique_group_cells = pa.array(np.unique(group_cells), type=_single(observations["cell_id"]).type)
     in_group = pc.is_in(_single(observations["cell_id"]), value_set=unique_group_cells)
     obs_members = observations.select(["cell_id", "sample_id"]).filter(in_group)
+    obs_order = pc.sort_indices(
+        obs_members, sort_keys=[("cell_id", "ascending"), ("sample_id", "ascending")])
+    obs_members = obs_members.take(obs_order)
     if obs_members.num_rows != members.num_rows:
         raise ValueError(
             f"group members cover {members.num_rows} rows, expected {obs_members.num_rows}")

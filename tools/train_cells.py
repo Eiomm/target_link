@@ -29,6 +29,8 @@ from target_link_v1.data.cell_corpus import CellCorpusDataset, collate_cells
 from target_link_v1.models.cell_mae import (
     CellMAE,
     masked_reconstruction_loss,
+    mean_supervised_group_loss,
+    reconstruction_error_sums,
     reconstruction_loss_by_group,
 )
 
@@ -51,7 +53,7 @@ def parse_args(argv=None):
     p.add_argument("--max-batches", type=int, default=0,
                    help="per split per epoch; 0 or -1 = full pass")
     p.add_argument("--max-groups", type=int, default=0,
-                   help="dataset-level cap; 0 or -1 = all")
+                   help="dataset cap for workers=0 debugging; 0 or -1 = all")
     p.add_argument("--groups-per-partition", type=int, default=0,
                    help="sample at most this many groups from every day/bucket; 0 = all")
     p.add_argument("--m-max", type=int, default=16)
@@ -79,10 +81,12 @@ def parse_args(argv=None):
     a.groups_per_partition = max(a.groups_per_partition, 0)
     if a.workers < 0 or a.probe_batches < 0:
         p.error("workers and probe-batches must be nonnegative")
+    if a.max_groups and a.workers:
+        p.error("--max-groups requires --workers 0; use --max-batches for multi-worker runs")
     return a
 
 
-def make_loader(root, a, epoch, train):
+def make_loader(root, a, epoch):
     ds = CellCorpusDataset(root, obs_dir=a.obs_dir, groups_dir=a.groups_dir,
                            seed=a.seed, epoch=epoch, shuffle_groups=True,
                            max_groups=a.max_groups or None, m_max=a.m_max,
@@ -100,10 +104,11 @@ def to_device(batch, device):
 
 def run_split(model, optimizer, root, a, epoch, train):
     # validation keeps one fixed mask set so epoch-to-epoch losses are comparable
-    ds, loader = make_loader(root, a, epoch if train else VAL_EPOCH, train)
+    ds, loader = make_loader(root, a, epoch if train else VAL_EPOCH)
     model.train(train)
     loss_sum, groups, supervised_groups, supervised_batches = 0.0, 0, 0, 0
     masked_bins, seen = 0, 0
+    absolute_error_s, squared_error_s = 0.0, 0.0
     recent_losses = deque(maxlen=100)
     bucket_sums = {"k3": 0.0, "k4_16": 0.0, "k17_plus": 0.0}
     bucket_counts = {name: 0 for name in bucket_sums}
@@ -116,12 +121,11 @@ def run_split(model, optimizer, root, a, epoch, train):
             batch = to_device(batch, a.device)
             out = model(batch)
             per_group_loss, group_has = reconstruction_loss_by_group(out, batch)
-            group_weight = group_has.to(per_group_loss.dtype)
-            loss = ((per_group_loss * group_weight).sum()
-                    / group_weight.sum().clamp_min(1))
+            abs_sum, sq_sum, error_bins = reconstruction_error_sums(
+                out, batch, a.target_transform)
+            loss = mean_supervised_group_loss(per_group_loss, group_has)
             if not torch.isfinite(loss):
                 raise ValueError("nonfinite loss")
-            reconstruction_mask = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]
             n_supervised = int(group_has.sum())
             has = n_supervised > 0
             k = batch["K"]
@@ -160,10 +164,12 @@ def run_split(model, optimizer, root, a, epoch, train):
             batch_loss = float(loss.detach())
             loss_sum += batch_loss * n_supervised
             supervised_groups += n_supervised
-            supervised_batches += has
+            supervised_batches += int(has)
             if has:
                 recent_losses.append(batch_loss)
-            masked_bins += int(reconstruction_mask.sum())
+            masked_bins += error_bins
+            absolute_error_s += float(abs_sum.detach())
+            squared_error_s += float(sq_sum.detach())
             groups += batch["x"].shape[0]
             seen += 1
             if a.log_every and seen % a.log_every == 0:
@@ -186,6 +192,8 @@ def run_split(model, optimizer, root, a, epoch, train):
          "supervised_batches": supervised_batches, "masked_bins": masked_bins,
          "batches": seen, "partitions": ds.n_partitions(),
          "seconds": elapsed, "batches_per_second": seen / max(elapsed, 1e-9)}
+    m["bin_mae_seconds"] = absolute_error_s / masked_bins
+    m["bin_rmse_seconds"] = (squared_error_s / masked_bins) ** 0.5
     m["loss_by_k"] = {
         name: {"loss": (bucket_sums[name] / bucket_counts[name]
                         if bucket_counts[name] else None),

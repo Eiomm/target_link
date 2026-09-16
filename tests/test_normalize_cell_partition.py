@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -6,6 +7,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from tools.normalize_cell_partition import MARKER, normalize_partition
+from tools.check_cell_corpus import check_corpus
 
 
 def _write(directory: Path, name: str, rows) -> None:
@@ -70,3 +72,25 @@ def test_normalize_rejects_wrong_group_membership_without_publishing(tmp_path):
     with pytest.raises(ValueError, match="membership"):
         normalize_partition(obs_dir, groups_dir, out)
     assert not out.exists()
+
+
+def test_training_preflight_accepts_aligned_normalized_splits(tmp_path):
+    obs_dir, groups_dir = _fixture(tmp_path / "source")
+    data = tmp_path / "corpus"
+    for split in ("train", "val"):
+        obs_out = (data / split / "observations_v2" /
+                   "day=20260821" / "bucket=0")
+        group_out = (data / split / "training_groups_k3" /
+                     "day=20260821" / "bucket=0")
+        normalize_partition(obs_dir, groups_dir, obs_out, row_group_size=2)
+        shutil.copytree(groups_dir, group_out)
+        # Reader requires cells to be contiguous, but sample_id order within a
+        # cell is intentionally not part of the corpus contract.
+        path = obs_out / "part-00000.parquet"
+        table = pq.ParquetFile(path).read()
+        table = table.take(pa.array([2, 0, 1, 5, 3, 4]))
+        pq.write_table(table, path)
+
+    result = check_corpus(data)
+    assert result["splits"]["train"]["partitions"] == 1
+    assert result["splits"]["val"]["groups"] == 2

@@ -118,8 +118,8 @@ class CellMAE(nn.Module):
         """batch: the dict `collate_cells` returns, already on the model's device.
 
         Returns `representation` h_CLS [B, d], `group_bin_state` [B, n_bins, d],
-        `trajectory_state` [B, m_max, d] (zero on padding), and `prediction` /
-        `target` [B, m_max, n_bins].
+        `trajectory_state` [B, m_max, d] (zero on masked/padding slots), and
+        `prediction` / `target` [B, m_max, n_bins].
         """
         x = batch["x"]                                    # [B,M,50,3]
         bin_valid = batch["bin_valid"]                    # [B,M,50]
@@ -181,15 +181,32 @@ class CellMAE(nn.Module):
                 "target": target.reshape(B, M, n)}
 
 
+def reconstruction_mask(batch):
+    """Exact bin positions supervised by whole-trajectory reconstruction."""
+    return batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]
+
+
 def reconstruction_loss_by_group(output, batch):
     """Return one Huber loss per group plus a has-supervision mask."""
-    mask = batch["mae_mask"].unsqueeze(-1) & batch["bin_valid"]     # [B,M,50]
-    err = F.huber_loss(output["prediction"], output["target"], reduction="none")
+    mask = reconstruction_mask(batch)                              # [B,M,50]
+    # Do not even evaluate Huber on unsupervised values: NaN * False is still
+    # NaN under IEEE arithmetic and would otherwise poison an unrelated group.
+    prediction = torch.where(mask, output["prediction"],
+                             torch.zeros_like(output["prediction"]))
+    target = torch.where(mask, output["target"], torch.zeros_like(output["target"]))
+    err = F.huber_loss(prediction, target, reduction="none")
     cnt = mask.sum(-1)                                              # [B,M]
     per_traj = (err * mask).sum(-1) / cnt.clamp_min(1)
     rows = cnt > 0
     per_group = (per_traj * rows).sum(1) / rows.sum(1).clamp_min(1)
     return per_group, rows.any(1)
+
+
+def mean_supervised_group_loss(per_group, has_supervision):
+    """Average group losses, excluding groups with no reconstruction target."""
+    weight = has_supervision.to(per_group.dtype)
+    selected = torch.where(has_supervision, per_group, torch.zeros_like(per_group))
+    return selected.sum() / weight.sum().clamp_min(1)
 
 
 def masked_reconstruction_loss(output, batch):
@@ -201,5 +218,25 @@ def masked_reconstruction_loss(output, batch):
     collate_cells an unmasked group can still happen, and it must not dilute).
     """
     per_group, has = reconstruction_loss_by_group(output, batch)
-    weight = has.to(per_group.dtype)
-    return (per_group * weight).sum() / weight.sum().clamp_min(1)
+    return mean_supervised_group_loss(per_group, has)
+
+
+def reconstruction_error_sums(output, batch, target_transform):
+    """Return absolute-error sum, squared-error sum and bin count in seconds.
+
+    Training may optimize Huber in log1p space, but reported prediction errors
+    should remain interpretable as seconds per bin. Only reconstruction-mask
+    positions participate, exactly as in the training loss.
+    """
+    if target_transform not in ("raw", "log1p"):
+        raise ValueError("target_transform must be raw or log1p")
+    prediction = output["prediction"].detach().to(torch.float64)
+    target = output["target"].detach().to(torch.float64)
+    if target_transform == "log1p":
+        prediction = torch.expm1(prediction).clamp_min(0.0)
+        target = torch.expm1(target)
+    error = (prediction - target)[reconstruction_mask(batch)]
+    absolute, squared = error.abs().sum(), error.square().sum()
+    if not bool(torch.isfinite(absolute)) or not bool(torch.isfinite(squared)):
+        raise ValueError("nonfinite reconstruction error in seconds")
+    return absolute, squared, error.numel()
