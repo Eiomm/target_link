@@ -1,0 +1,7 @@
+# Python >= 3.11; verified on Python 3.12 / Linux.
+# Select an appropriate PyTorch CPU/CUDA build for your machine.
+torch==2.6.0
+numpy==2.3.2
+pyarrow==21.0.0
+matplotlib==3.10.6
+tqdm==4.67.1

@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" agent="Codex" version="24.7.17" type="device">
+  <diagram id="trajectory-mlp-v1" name="Trajectory MLP MAE｜正确实验结构">
+    <mxGraphModel dx="2000" dy="1040" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1560" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Trajectory MLP MAE｜整条轨迹作为一个 token" style="rounded=1;whiteSpace=wrap;html=0;fillColor=none;strokeColor=none;strokeWidth=1.5;fontColor=#172554;fontSize=30;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;fontColor=#172554;align=left;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="25" width="1780" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sub" value="对应 experiments/trajectory_mlp_v1/model.py｜默认 64 条/组，d=256，8 heads，encoder 4 层，decoder 2 层" style="rounded=1;whiteSpace=wrap;html=0;fillColor=none;strokeColor=none;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;fontColor=#475569;align=left;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="1780" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="select" value="先选择可见轨迹&#10;traj_valid AND NOT mae_mask" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#EFF6FF;strokeColor=#60A5FA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="180" width="530" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="features" value="可见轨迹内容输入&#10;[T_clean, ratio, valid]，每条 50 × 3&#10;无效 T 清零，ratio 独立保留&#10;按固定 bin 顺序展平为 150 维" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#EFF6FF;strokeColor=#60A5FA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="530" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="mlp" value="轨迹 MLP&#10;Linear 150→256 → GELU → LN&#10;→ Dropout → Linear 256→256" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#F5F3FF;strokeColor=#A78BFA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="500" width="530" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="add" value="加入可见轨迹的时间编码" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#F5F3FF;strokeColor=#A78BFA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="660" width="530" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="enc" value="CLS + 可见轨迹 tokens&#10;4 层 Transformer Encoder → LN&#10;8 heads；d=256；FFN=1024" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#F5F3FF;strokeColor=#A78BFA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="780" width="530" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="time" value="共享时间编码（两种配置）&#10;seconds：delta_t/600 → MLP&#10;bucket30：30 秒一桶 → 20 桶 Embedding&#10;编码器与解码器共享参数" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#EFF6FF;strokeColor=#60A5FA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="720" y="330" width="480" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="hidden" value="隐藏轨迹&#10;使用共享可学习 mask token" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FFF7ED;strokeColor=#FB923C;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="180" width="500" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ratio" value="隐藏轨迹的已知 ratio&#10;50 维覆盖比例 → Linear 50→256" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#EFF6FF;strokeColor=#60A5FA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="320" width="500" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="hcond" value="隐藏行条件 token&#10;mask token + ratio 编码&#10;不输入隐藏耗时与隐藏 bin_valid" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FFF7ED;strokeColor=#FB923C;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="500" width="500" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="states" value="可见轨迹 encoder 状态&#10;Linear 256→256，恢复原槽位" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#F5F3FF;strokeColor=#A78BFA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="670" y="790" width="550" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="cls" value="CLS encoder 状态&#10;Linear 256→256" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#F5F3FF;strokeColor=#A78BFA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="980" width="400" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="restore" value="拼回全部轨迹行&#10;可见行：投影后的 encoder 状态&#10;隐藏行：mask token + ratio 编码&#10;各轨迹行再加共享时间编码" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FFF7ED;strokeColor=#FB923C;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="670" y="960" width="550" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="decoder" value="CLS + 全部轨迹行&#10;2 层 Transformer 解码器（联合自注意力）&#10;8 heads；d=256；padding key mask" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FFF7ED;strokeColor=#FB923C;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1160" width="550" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="prediction" value="取轨迹位置的输出 → LN → Linear 256→50 → Softplus&#10;预测原始非负秒数：[B, M, 50]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FFF7ED;strokeColor=#FB923C;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1320" width="550" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="loss" value="micro raw MAE&#10;所有监督 bin 的绝对误差之和&#10;÷ 监督 bin 总数" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FDF2F8;strokeColor=#F472B6;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="1310" width="500" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="target" value="真实原始秒数，仅用于监督&#10;traj_valid AND mae_mask AND bin_valid" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#FDF2F8;strokeColor=#F472B6;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="1120" width="500" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="notes" value="实现要点&#10;&#10;每条轨迹是一个 token&#10;无逐 bin Transformer&#10;无 group_bin 分支&#10;无额外 bin 位置编码&#10;不使用 observed&#10;不做 log1p 或 Huber" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#EFF6FF;strokeColor=#60A5FA;strokeWidth=1.5;fontColor=#172554;fontSize=18;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1160" width="480" height="265" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748B;fontSize=15;fontColor=#64748B;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="select" target="features">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748B;fontSize=15;fontColor=#64748B;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="features" target="mlp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748B;fontSize=15;fontColor=#64748B;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="mlp" target="add">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748B;fontSize=15;fontColor=#64748B;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="add" target="enc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="可见行时间" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#0891B2;fontSize=15;fontColor=#0891B2;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="time" target="add">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="397" />
+              <mxPoint x="630" y="692" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#EA580C;fontSize=15;fontColor=#EA580C;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="hidden" target="hcond">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1850" y="225" />
+              <mxPoint x="1850" y="557" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#EA580C;fontSize=15;fontColor=#EA580C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="ratio" target="hcond">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#7C3AED;fontSize=15;fontColor=#7C3AED;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="enc" target="states">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#7C3AED;fontSize=15;fontColor=#7C3AED;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="enc" target="cls">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#7C3AED;fontSize=15;fontColor=#7C3AED;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="states" target="restore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#EA580C;fontSize=15;fontColor=#EA580C;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="hcond" target="restore">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1570" y="1027" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="所有真实轨迹行的时间" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#0891B2;fontSize=15;fontColor=#0891B2;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0.7;entryY=0;" edge="1" parent="1" source="time" target="restore">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1250" y="397" />
+              <mxPoint x="1250" y="925" />
+              <mxPoint x="1055" y="925" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#EA580C;fontSize=15;fontColor=#EA580C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="restore" target="decoder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#7C3AED;fontSize=15;fontColor=#7C3AED;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="cls" target="decoder">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="1027" />
+              <mxPoint x="550" y="1215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#EA580C;fontSize=15;fontColor=#EA580C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="decoder" target="prediction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#DB2777;fontSize=15;fontColor=#DB2777;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="prediction" target="loss">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#DB2777;fontSize=15;fontColor=#DB2777;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="target" target="loss">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="foot" value="valid 是可见轨迹的第三个内容特征；隐藏轨迹的 valid 只决定监督位置，不进入预测。" style="rounded=1;whiteSpace=wrap;html=0;fillColor=none;strokeColor=none;strokeWidth=1.5;fontColor=#172554;fontSize=20;fontFamily=Helvetica;align=center;verticalAlign=middle;spacing=14;arcSize=12;fontColor=#475569;align=left;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1470" width="1780" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

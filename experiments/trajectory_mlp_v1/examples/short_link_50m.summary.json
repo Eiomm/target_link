@@ -1,0 +1,376 @@
+{
+  "x_range_mode": "coverage",
+  "x_min_m": 0.0,
+  "x_max_m": 50.0,
+  "segment_length_m": 50.0,
+  "coverage_upper_bound_m": 50.0,
+  "farthest_recorded_bin": 4,
+  "coverage_resolution": "10m bin bounds; clipped by geometry when known",
+  "presence_source": "explicit_piece_records",
+  "n_recorded_bin_observations": 13,
+  "n_recorded_invalid_times": 1,
+  "colour_min_s": 0.9550000000000001,
+  "colour_max_s": 1.345,
+  "heatmap_rows": 3,
+  "svg": "short_link_50m.svg",
+  "target_link_id": "SYNTHETIC-short_link_50m",
+  "seg_idx": 0,
+  "window_local": "Illustration only",
+  "n_trajectories": 3,
+  "metric": "raw",
+  "lower_percentile": 5,
+  "upper_percentile": 95,
+  "synthetic": true,
+  "per_bin": [
+    {
+      "bin_pos": 0,
+      "n": 2,
+      "p25_s": 0.925,
+      "p50_s": 0.95,
+      "p75_s": 0.975
+    },
+    {
+      "bin_pos": 1,
+      "n": 3,
+      "p25_s": 1.05,
+      "p50_s": 1.1,
+      "p75_s": 1.15
+    },
+    {
+      "bin_pos": 2,
+      "n": 2,
+      "p25_s": 1.325,
+      "p50_s": 1.35,
+      "p75_s": 1.375
+    },
+    {
+      "bin_pos": 3,
+      "n": 3,
+      "p25_s": 1.15,
+      "p50_s": 1.2,
+      "p75_s": 1.2
+    },
+    {
+      "bin_pos": 4,
+      "n": 2,
+      "p25_s": 1.025,
+      "p50_s": 1.05,
+      "p75_s": 1.075
+    },
+    {
+      "bin_pos": 5,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 6,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 7,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 8,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 9,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 10,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 11,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 12,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 13,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 14,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 15,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 16,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 17,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 18,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 19,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 20,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 21,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 22,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 23,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 24,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 25,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 26,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 27,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 28,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 29,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 30,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 31,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 32,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 33,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 34,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 35,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 36,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 37,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 38,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 39,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 40,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 41,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 42,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 43,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 44,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 45,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 46,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 47,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 48,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    },
+    {
+      "bin_pos": 49,
+      "n": 0,
+      "p25_s": null,
+      "p50_s": null,
+      "p75_s": null
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="812" viewBox="0 0 1200 812" role="img">
+<rect x="0" y="0" width="1200" height="812" fill="#ffffff"/>
+<style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#20242a}.title{font-size:22px;font-weight:650}.sub{font-size:13px;fill:#59616d}.axis{font-size:12px;fill:#59616d}.label{font-size:14px;font-weight:600}.grid{stroke:#e4e7eb;stroke-width:1}.frame{fill:none;stroke:#aeb5bf;stroke-width:1}</style>
+<text class="title" x="124" y="34">Link SYNTHETIC-offset_coverage_170m · seg 0 · Illustration only · K=2</text>
+<text class="sub" x="124" y="58">Raw bin T_diff (s) · colour P5–P95 = 1–1.44 s</text>
+<defs><pattern id="invalid-time" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#f6ddb0"/><path d="M0,6 L6,0" stroke="#b48336" stroke-width="1"/></pattern></defs>
+<text class="sub" x="124" y="80">Range: 0–170 m (coverage); road length: unknown; original bin positions retained</text>
+<rect x="124" y="94" width="12" height="12" fill="#d9dde3"/>
+<text class="sub" x="142" y="105">No piece record (coverage unknown)</text>
+<rect x="449" y="94" width="12" height="12" fill="url(#invalid-time)"/>
+<text class="sub" x="467" y="105">Recorded, time invalid</text>
+<rect x="699" y="94" width="12" height="12" fill="#aeb5bf"/>
+<text class="sub" x="717" y="105">Outside known road</text>
+<rect x="896.00" y="118" width="2.70" height="10" fill="#2ca25f"/>
+<rect x="898.50" y="118" width="2.70" height="10" fill="#30a360"/>
+<rect x="901.00" y="118" width="2.70" height="10" fill="#34a561"/>
+<rect x="903.50" y="118" width="2.70" height="10" fill="#39a662"/>
+<rect x="906.00" y="118" width="2.70" height="10" fill="#3da763"/>
+<rect x="908.50" y="118" width="2.70" height="10" fill="#41a863"/>
+<rect x="911.00" y="118" width="2.70" height="10" fill="#45aa64"/>
+<rect x="913.50" y="118" width="2.70" height="10" fill="#4aab65"/>
+<rect x="916.00" y="118" width="2.70" height="10" fill="#4eac66"/>
+<rect x="918.50" y="118" width="2.70" height="10" fill="#52ad67"/>
+<rect x="921.00" y="118" width="2.70" height="10" fill="#56af68"/>
+<rect x="923.50" y="118" width="2.70" height="10" fill="#5bb069"/>
+<rect x="926.00" y="118" width="2.70" height="10" fill="#5fb16a"/>
+<rect x="928.50" y="118" width="2.70" height="10" fill="#63b26b"/>
+<rect x="931.00" y="118" width="2.70" height="10" fill="#67b46b"/>
+<rect x="933.50" y="118" width="2.70" height="10" fill="#6cb56c"/>
+<rect x="936.00" y="118" width="2.70" height="10" fill="#70b66d"/>
+<rect x="938.50" y="118" width="2.70" height="10" fill="#74b76e"/>
+<rect x="941.00" y="118" width="2.70" height="10" fill="#78b96f"/>
+<rect x="943.50" y="118" width="2.70" height="10" fill="#7dba70"/>
+<rect x="946.00" y="118" width="2.70" height="10" fill="#81bb71"/>
+<rect x="948.50" y="118" width="2.70" height="10" fill="#85bc72"/>
+<rect x="951.00" y="118" width="2.70" height="10" fill="#89be73"/>
+<rect x="953.50" y="118" width="2.70" height="10" fill="#8ebf73"/>
+<rect x="956.00" y="118" width="2.70" height="10" fill="#92c074"/>
+<rect x="958.50" y="118" width="2.70" height="10" fill="#96c175"/>
+<rect x="961.00" y="118" width="2.70" height="10" fill="#9ac376"/>
+<rect x="963.50" y="118" width="2.70" height="10" fill="#9fc477"/>
+<rect x="966.00" y="118" width="2.70" height="10" fill="#a3c578"/>
+<rect x="968.50" y="118" width="2.70" height="10" fill="#a7c679"/>
+<rect x="971.00" y="118" width="2.70" height="10" fill="#abc87a"/>
+<rect x="973.50" y="118" width="2.70" height="10" fill="#b0c97b"/>
+<rect x="976.00" y="118" width="2.70" height="10" fill="#b4ca7b"/>
+<rect x="978.50" y="118" width="2.70" height="10" fill="#b8cb7c"/>
+<rect x="981.00" y="118" width="2.70" height="10" fill="#bccd7d"/>
+<rect x="983.50" y="118" width="2.70" height="10" fill="#c0ce7e"/>
+<rect x="986.00" y="118" width="2.70" height="10" fill="#c5cf7f"/>
+<rect x="988.50" y="118" width="2.70" height="10" fill="#c9d080"/>
+<rect x="991.00" y="118" width="2.70" height="10" fill="#cdd281"/>
+<rect x="993.50" y="118" width="2.70" height="10" fill="#d1d382"/>
+<rect x="996.00" y="118" width="2.70" height="10" fill="#d6d483"/>
+<rect x="998.50" y="118" width="2.70" height="10" fill="#dad583"/>
+<rect x="1001.00" y="118" width="2.70" height="10" fill="#ded784"/>
+<rect x="1003.50" y="118" width="2.70" height="10" fill="#e2d885"/>
+<rect x="1006.00" y="118" width="2.70" height="10" fill="#e7d986"/>
+<rect x="1008.50" y="118" width="2.70" height="10" fill="#ebda87"/>
+<rect x="1011.00" y="118" width="2.70" height="10" fill="#efdc88"/>
+<rect x="1013.50" y="118" width="2.70" height="10" fill="#f3dd89"/>
+<rect x="1016.00" y="118" width="2.70" height="10" fill="#f8de8a"/>
+<rect x="1018.50" y="118" width="2.70" height="10" fill="#fcdf8b"/>
+<rect x="1021.00" y="118" width="2.70" height="10" fill="#fede8a"/>
+<rect x="1023.50" y="118" width="2.70" height="10" fill="#fddb88"/>
+<rect x="1026.00" y="118" width="2.70" height="10" fill="#fcd786"/>
+<rect x="1028.50" y="118" width="2.70" height="10" fill="#fbd484"/>
+<rect x="1031.00" y="118" width="2.70" height="10" fill="#fad082"/>
+<rect x="1033.50" y="118" width="2.70" height="10" fill="#facc80"/>
+<rect x="1036.00" y="118" width="2.70" height="10" fill="#f9c97e"/>
+<rect x="1038.50" y="118" width="2.70" height="10" fill="#f8c57c"/>
+<rect x="1041.00" y="118" width="2.70" height="10" fill="#f7c27a"/>
+<rect x="1043.50" y="118" width="2.70" height="10" fill="#f7be78"/>
+<rect x="1046.00" y="118" width="2.70" height="10" fill="#f6bb76"/>
+<rect x="1048.50" y="118" width="2.70" height="10" fill="#f5b774"/>
+<rect x="1051.00" y="118" width="2.70" height="10" fill="#f4b472"/>
+<rect x="1053.50" y="118" width="2.70" height="10" fill="#f3b070"/>
+<rect x="1056.00" y="118" width="2.70" height="10" fill="#f3ac6e"/>
+<rect x="1058.50" y="118" width="2.70" height="10" fill="#f2a96c"/>
+<rect x="1061.00" y="118" width="2.70" height="10" fill="#f1a56a"/>
+<rect x="1063.50" y="118" width="2.70" height="10" fill="#f0a268"/>
+<rect x="1066.00" y="118" width="2.70" height="10" fill="#ef9e66"/>
+<rect x="1068.50" y="118" width="2.70" height="10" fill="#ef9b64"/>
+<rect x="1071.00" y="118" width="2.70" height="10" fill="#ee9762"/>
+<rect x="1073.50" y="118" width="2.70" height="10" fill="#ed9460"/>
+<rect x="1076.00" y="118" width="2.70" height="10" fill="#ec905e"/>
+<rect x="1078.50" y="118" width="2.70" height="10" fill="#eb8c5c"/>
+<rect x="1081.00" y="118" width="2.70" height="10" fill="#eb895a"/>
+<rect x="1083.50" y="118" width="2.70" height="10" fill="#ea8557"/>
+<rect x="1086.00" y="118" width="2.70" height="10" fill="#e98255"/>
+<rect x="1088.50" y="118" width="2.70" height="10" fill="#e87e53"/>
+<rect x="1091.00" y="118" width="2.70" height="10" fill="#e87b51"/>
+<rect x="1093.50" y="118" width="2.70" height="10" fill="#e7774f"/>
+<rect x="1096.00" y="118" width="2.70" height="10" fill="#e6744d"/>
+<rect x="1098.50" y="118" width="2.70" height="10" fill="#e5704b"/>
+<rect x="1101.00" y="118" width="2.70" height="10" fill="#e46c49"/>
+<rect x="1103.50" y="118" width="2.70" height="10" fill="#e46947"/>
+<rect x="1106.00" y="118" width="2.70" height="10" fill="#e36545"/>
+<rect x="1108.50" y="118" width="2.70" height="10" fill="#e26243"/>
+<rect x="1111.00" y="118" width="2.70" height="10" fill="#e15e41"/>
+<rect x="1113.50" y="118" width="2.70" height="10" fill="#e05b3f"/>
+<rect x="1116.00" y="118" width="2.70" height="10" fill="#e0573d"/>
+<rect x="1118.50" y="118" width="2.70" height="10" fill="#df543b"/>
+<rect x="1121.00" y="118" width="2.70" height="10" fill="#de5039"/>
+<rect x="1123.50" y="118" width="2.70" height="10" fill="#dd4c37"/>
+<rect x="1126.00" y="118" width="2.70" height="10" fill="#dd4935"/>
+<rect x="1128.50" y="118" width="2.70" height="10" fill="#dc4533"/>
+<rect x="1131.00" y="118" width="2.70" height="10" fill="#db4231"/>
+<rect x="1133.50" y="118" width="2.70" height="10" fill="#da3e2f"/>
+<rect x="1136.00" y="118" width="2.70" height="10" fill="#d93b2d"/>
+<rect x="1138.50" y="118" width="2.70" height="10" fill="#d9372b"/>
+<rect x="1141.00" y="118" width="2.70" height="10" fill="#d83429"/>
+<rect x="1143.50" y="118" width="2.70" height="10" fill="#d73027"/>
+<text class="axis" x="896.0" y="141" text-anchor="start">1 s</text>
+<text class="axis" x="1146.0" y="141" text-anchor="end">1.44 s</text>
+<rect class="bin" data-bin="0" data-status="no_record" x="124.000" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 0 (0–10m) · no_record</title></rect>
+<rect class="bin" data-bin="1" data-status="no_record" x="184.118" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 1 (10–20m) · no_record</title></rect>
+<rect class="bin" data-bin="2" data-status="no_record" x="244.235" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 2 (20–30m) · no_record</title></rect>
+<rect class="bin" data-bin="3" data-status="no_record" x="304.353" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 3 (30–40m) · no_record</title></rect>
+<rect class="bin" data-bin="4" data-status="no_record" x="364.471" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 4 (40–50m) · no_record</title></rect>
+<rect class="bin" data-bin="5" data-status="no_record" x="424.588" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 5 (50–60m) · no_record</title></rect>
+<rect class="bin" data-bin="6" data-status="no_record" x="484.706" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 6 (60–70m) · no_record</title></rect>
+<rect class="bin" data-bin="7" data-status="no_record" x="544.824" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 7 (70–80m) · no_record</title></rect>
+<rect class="bin" data-bin="8" data-status="no_record" x="604.941" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 8 (80–90m) · no_record</title></rect>
+<rect class="bin" data-bin="9" data-status="no_record" x="665.059" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 9 (90–100m) · no_record</title></rect>
+<rect class="bin" data-bin="10" data-status="no_record" x="725.176" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 10 (100–110m) · no_record</title></rect>
+<rect class="bin" data-bin="11" data-status="no_record" x="785.294" y="148.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-1 · 05:01:00 · bin 11 (110–120m) · no_record</title></rect>
+<rect class="bin" data-bin="12" data-status="valid" x="845.412" y="148.000" width="60.118" height="130.000" fill="#de5039"><title>example-1 · 05:01:00 · bin 12 (120–130m) · 1.4 s</title></rect>
+<rect class="bin" data-bin="13" data-status="valid" x="905.529" y="148.000" width="60.118" height="130.000" fill="#d73027"><title>example-1 · 05:01:00 · bin 13 (130–140m) · 1.5 s</title></rect>
+<rect class="bin" data-bin="14" data-status="valid" x="965.647" y="148.000" width="60.118" height="130.000" fill="#de5039"><title>example-1 · 05:01:00 · bin 14 (140–150m) · 1.4 s</title></rect>
+<rect class="bin" data-bin="15" data-status="valid" x="1025.765" y="148.000" width="60.118" height="130.000" fill="#f0a067"><title>example-1 · 05:01:00 · bin 15 (150–160m) · 1.3 s</title></rect>
+<rect class="bin" data-bin="16" data-status="valid" x="1085.882" y="148.000" width="60.118" height="130.000" fill="#ebda87"><title>example-1 · 05:01:00 · bin 16 (160–170m) · 1.2 s</title></rect>
+<rect class="bin" data-bin="0" data-status="valid" x="124.000" y="278.000" width="60.118" height="130.000" fill="#2ca25f"><title>example-0 · 05:00:00 · bin 0 (0–10m) · 1 s</title></rect>
+<rect class="bin" data-bin="1" data-status="valid" x="184.118" y="278.000" width="60.118" height="130.000" fill="#8bbe73"><title>example-0 · 05:00:00 · bin 1 (10–20m) · 1.1 s</title></rect>
+<rect class="bin" data-bin="2" data-status="valid" x="244.235" y="278.000" width="60.118" height="130.000" fill="#ebda87"><title>example-0 · 05:00:00 · bin 2 (20–30m) · 1.2 s</title></rect>
+<rect class="bin" data-bin="3" data-status="valid" x="304.353" y="278.000" width="60.118" height="130.000" fill="#8bbe73"><title>example-0 · 05:00:00 · bin 3 (30–40m) · 1.1 s</title></rect>
+<rect class="bin" data-bin="4" data-status="valid" x="364.471" y="278.000" width="60.118" height="130.000" fill="#2ca25f"><title>example-0 · 05:00:00 · bin 4 (40–50m) · 1 s</title></rect>
+<rect class="bin" data-bin="5" data-status="valid" x="424.588" y="278.000" width="60.118" height="130.000" fill="#ebda87"><title>example-0 · 05:00:00 · bin 5 (50–60m) · 1.2 s</title></rect>
+<rect class="bin" data-bin="6" data-status="valid" x="484.706" y="278.000" width="60.118" height="130.000" fill="#f0a067"><title>example-0 · 05:00:00 · bin 6 (60–70m) · 1.3 s</title></rect>
+<rect class="bin" data-bin="7" data-status="valid" x="544.824" y="278.000" width="60.118" height="130.000" fill="#2ca25f"><title>example-0 · 05:00:00 · bin 7 (70–80m) · 1 s</title></rect>
+<rect class="bin" data-bin="8" data-status="no_record" x="604.941" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 8 (80–90m) · no_record</title></rect>
+<rect class="bin" data-bin="9" data-status="no_record" x="665.059" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 9 (90–100m) · no_record</title></rect>
+<rect class="bin" data-bin="10" data-status="no_record" x="725.176" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 10 (100–110m) · no_record</title></rect>
+<rect class="bin" data-bin="11" data-status="no_record" x="785.294" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 11 (110–120m) · no_record</title></rect>
+<rect class="bin" data-bin="12" data-status="no_record" x="845.412" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 12 (120–130m) · no_record</title></rect>
+<rect class="bin" data-bin="13" data-status="no_record" x="905.529" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 13 (130–140m) · no_record</title></rect>
+<rect class="bin" data-bin="14" data-status="no_record" x="965.647" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 14 (140–150m) · no_record</title></rect>
+<rect class="bin" data-bin="15" data-status="no_record" x="1025.765" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 15 (150–160m) · no_record</title></rect>
+<rect class="bin" data-bin="16" data-status="no_record" x="1085.882" y="278.000" width="60.118" height="130.000" fill="#d9dde3"><title>example-0 · 05:00:00 · bin 16 (160–170m) · no_record</title></rect>
+<rect class="frame" x="124" y="148" width="1022.0" height="260.0"/>
+<text class="label" transform="translate(24 278.0) rotate(-90)" text-anchor="middle">Trajectory entry time (early bottom → late top; showing 2/2)</text>
+<line x1="119" y1="213.00" x2="124" y2="213.00" stroke="#7c8795" stroke-width="1"/>
+<text class="axis" x="115" y="217.00" text-anchor="end">05:01:00</text>
+<line x1="119" y1="343.00" x2="124" y2="343.00" stroke="#7c8795" stroke-width="1"/>
+<text class="axis" x="115" y="347.00" text-anchor="end">05:00:00</text>
+<line class="grid" x1="124.00" y1="148" x2="124.00" y2="408.0"/>
+<text class="axis" x="124.00" y="427.0" text-anchor="middle">0</text>
+<line class="grid" x1="424.59" y1="148" x2="424.59" y2="408.0"/>
+<text class="axis" x="424.59" y="427.0" text-anchor="middle">50</text>
+<line class="grid" x1="725.18" y1="148" x2="725.18" y2="408.0"/>
+<text class="axis" x="725.18" y="427.0" text-anchor="middle">100</text>
+<line class="grid" x1="1025.76" y1="148" x2="1025.76" y2="408.0"/>
+<text class="axis" x="1025.76" y="427.0" text-anchor="middle">150</text>
+<line class="grid" x1="1146.00" y1="148" x2="1146.00" y2="408.0"/>
+<text class="axis" x="1146.00" y="427.0" text-anchor="middle">170</text>
+<text class="label" x="635.0" y="455.0" text-anchor="middle">Distance in segment (m)</text>
+<line class="grid" x1="124" y1="730.00" x2="1146" y2="730.00"/>
+<text class="axis" x="115" y="734.00" text-anchor="end">0.96</text>
+<line class="grid" x1="124" y1="672.50" x2="1146" y2="672.50"/>
+<text class="axis" x="115" y="676.50" text-anchor="end">1.1</text>
+<line class="grid" x1="124" y1="615.00" x2="1146" y2="615.00"/>
+<text class="axis" x="115" y="619.00" text-anchor="end">1.2</text>
+<line class="grid" x1="124" y1="557.50" x2="1146" y2="557.50"/>
+<text class="axis" x="115" y="561.50" text-anchor="end">1.4</text>
+<line class="grid" x1="124" y1="500.00" x2="1146" y2="500.00"/>
+<text class="axis" x="115" y="504.00" text-anchor="end">1.5</text>
+<polygon class="iqr" points="154.06,714.14 214.18,674.48 274.29,634.83 334.41,674.48 394.53,714.14 454.65,634.83 514.76,595.17 574.88,714.14 574.88,714.14 514.76,595.17 454.65,634.83 394.53,714.14 334.41,674.48 274.29,634.83 214.18,674.48 154.06,714.14" fill="#8ab4d6" fill-opacity="0.35"/>
+<polyline class="median" points="154.06,714.14 214.18,674.48 274.29,634.83 334.41,674.48 394.53,714.14 454.65,634.83 514.76,595.17 574.88,714.14" fill="none" stroke="#315f86" stroke-width="2.2"/>
+<polygon class="iqr" points="875.47,555.52 935.59,515.86 995.71,555.52 1055.82,595.17 1115.94,634.83 1115.94,634.83 1055.82,595.17 995.71,555.52 935.59,515.86 875.47,555.52" fill="#8ab4d6" fill-opacity="0.35"/>
+<polyline class="median" points="875.47,555.52 935.59,515.86 995.71,555.52 1055.82,595.17 1115.94,634.83" fill="none" stroke="#315f86" stroke-width="2.2"/>
+<circle cx="154.06" cy="714.14" r="2.6" fill="#315f86"><title>bin 0 · n=1 · P25/P50/P75=1/1/1 s</title></circle>
+<circle cx="214.18" cy="674.48" r="2.6" fill="#315f86"><title>bin 1 · n=1 · P25/P50/P75=1.1/1.1/1.1 s</title></circle>
+<circle cx="274.29" cy="634.83" r="2.6" fill="#315f86"><title>bin 2 · n=1 · P25/P50/P75=1.2/1.2/1.2 s</title></circle>
+<circle cx="334.41" cy="674.48" r="2.6" fill="#315f86"><title>bin 3 · n=1 · P25/P50/P75=1.1/1.1/1.1 s</title></circle>
+<circle cx="394.53" cy="714.14" r="2.6" fill="#315f86"><title>bin 4 · n=1 · P25/P50/P75=1/1/1 s</title></circle>
+<circle cx="454.65" cy="634.83" r="2.6" fill="#315f86"><title>bin 5 · n=1 · P25/P50/P75=1.2/1.2/1.2 s</title></circle>
+<circle cx="514.76" cy="595.17" r="2.6" fill="#315f86"><title>bin 6 · n=1 · P25/P50/P75=1.3/1.3/1.3 s</title></circle>
+<circle cx="574.88" cy="714.14" r="2.6" fill="#315f86"><title>bin 7 · n=1 · P25/P50/P75=1/1/1 s</title></circle>
+<circle cx="875.47" cy="555.52" r="2.6" fill="#315f86"><title>bin 12 · n=1 · P25/P50/P75=1.4/1.4/1.4 s</title></circle>
+<circle cx="935.59" cy="515.86" r="2.6" fill="#315f86"><title>bin 13 · n=1 · P25/P50/P75=1.5/1.5/1.5 s</title></circle>
+<circle cx="995.71" cy="555.52" r="2.6" fill="#315f86"><title>bin 14 · n=1 · P25/P50/P75=1.4/1.4/1.4 s</title></circle>
+<circle cx="1055.82" cy="595.17" r="2.6" fill="#315f86"><title>bin 15 · n=1 · P25/P50/P75=1.3/1.3/1.3 s</title></circle>
+<circle cx="1115.94" cy="634.83" r="2.6" fill="#315f86"><title>bin 16 · n=1 · P25/P50/P75=1.2/1.2/1.2 s</title></circle>
+<rect class="frame" x="124" y="500.0" width="1022.0" height="230.0"/>
+<text class="label" x="124" y="483.0">Per-bin distribution</text>
+<text class="sub" x="288" y="483.0">median line · shaded P25–P75 · zoomed y-scale</text>
+<text class="label" transform="translate(28 615.0) rotate(-90)" text-anchor="middle">Raw T_diff (s)</text>
+<text class="axis" x="124.00" y="750.0" text-anchor="middle">0</text>
+<text class="axis" x="424.59" y="750.0" text-anchor="middle">50</text>
+<text class="axis" x="725.18" y="750.0" text-anchor="middle">100</text>
+<text class="axis" x="1025.76" y="750.0" text-anchor="middle">150</text>
+<text class="axis" x="1146.00" y="750.0" text-anchor="middle">170</text>
+<text class="label" x="635.0" y="778.0" text-anchor="middle">Distance in segment (m)</text>
+</svg>
