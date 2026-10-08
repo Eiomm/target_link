@@ -1,0 +1,26 @@
+{
+  "scope": "Clean export of Git-tracked source; no local data, runtime artifacts or archived weights",
+  "tests": 229,
+  "passed": 225,
+  "failed": 0,
+  "errors": 0,
+  "skipped": [
+    {
+      "test": "V4.tests.test_archive.test_original_checkpoint_loads_and_isolates_hidden_labels",
+      "reason": "Archived server checkpoint is not distributed in Git"
+    },
+    {
+      "test": "tests.test_prepare_tensors_yarn.test_live_jvm_filesystem_and_executor_transport",
+      "reason": "Set RUN_SPARK_INTEGRATION=1 for actual Spark/JVM filesystem check"
+    },
+    {
+      "test": "tests.test_raw_training_tensors.test_raw_transform_and_full_publication",
+      "reason": "Set RUN_RAW_SPARK_TEST=1 for local Spark integration"
+    },
+    {
+      "test": "trajectory_mae.tests.test_visible_mean_benchmark.test_gpu_and_cpu_complete_passes_match",
+      "reason": "CUDA unavailable"
+    }
+  ],
+  "seconds": 177.894
+}
