@@ -1,0 +1,2 @@
+# Preserve original archived experiment bytes and provenance hashes.
+V4/results/** -text -whitespace

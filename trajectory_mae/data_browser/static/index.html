@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>轨迹数据浏览器 · trajectory_mlp_v1</title>
+<meta name="description" content="本地浏览七天真实训练数据，逐层查看 cell、group、轨迹与 bin。">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css">
+<script src="/app.js" defer></script>
+</head>
+<body>
+<header><div><span class="eyebrow">TRAJECTORY / DATA EXPLORER</span><h1>轨迹数据浏览器</h1></div><span class="badge">本地 · 只读</span></header>
+<main>
+<div id="global-error" class="notice error" role="alert" hidden></div>
+<section class="overview" aria-label="全量概览">
+ <div class="summary"><div><span>原始轨迹记录</span><strong id="total-rows">—</strong></div><div><span>训练规则保留记录</span><strong id="total-retained">—</strong></div><div><span>构造的 group</span><strong id="total-groups">—</strong></div></div>
+ <div id="days" class="days" aria-label="按日期浏览"></div>
+ <div id="provenance" class="caption">正在读取全量统计…</div>
+</section>
+<nav class="view-nav" aria-label="页面导航"><button id="browse-tab" aria-pressed="true">数据浏览</button><button id="stats-tab" aria-pressed="false">数据统计</button></nav>
+<section id="stats-panel" class="overview" hidden><div class="stats-toolbar"><h2>全量数据统计</h2><label>统计范围<select id="stats-scope"><option value="all">全部七天</option><option value="train">训练集 · 六天</option><option value="validation">验证集 · 一天</option></select></label></div><p class="caption">来自全量扫描报告，覆盖所选日期的全部 128 个 bucket；不受左侧 cell 筛选影响。记录数不是去重车辆数。</p><div id="stats-kpis" class="summary"></div><div class="chart-grid"><article><h3>记录去向 · 占比</h3><svg id="pie-chart" viewBox="0 0 600 250" role="img" aria-label="记录保留与剔除占比"></svg><div id="pie-legend"></div></article><article><h3>每日记录 · 原始与保留</h3><svg id="bar-chart" viewBox="0 0 600 300" role="img" aria-label="每日原始和保留记录柱状图"></svg><p class="caption">蓝色：原始记录　绿色：训练规则保留</p></article><article class="wide-chart"><h3>10 分钟记录量趋势</h3><svg id="line-chart" viewBox="0 0 1000 280" role="img" aria-label="每十分钟记录数量折线图"></svg><label>拖动查看具体时间窗<input id="trend-position" type="range" min="0" value="0" step="1"></label><p id="trend-detail" aria-live="polite"></p></article></div><details><summary>每日精确统计</summary><div class="table-wrap"><table><thead><tr><th>日期</th><th>原始记录</th><th>保留记录</th><th>保留率</th><th>可训练 cell 占比</th></tr></thead><tbody id="stats-table"></tbody></table></div></details></section>
+<div class="workspace" id="browse-panel">
+<aside aria-label="查找 cell">
+ <h2>找到一个 cell</h2>
+ <p class="caption">先选日期、分区和时间，直接从列表浏览。</p>
+ <div class="filter-row"><label>日期<select id="day-select"></select></label><label>bucket · 0～127<div class="step-control"><button id="prev-bucket" type="button" aria-label="上一个 bucket">‹</button><input id="bucket-select" type="number" min="0" max="127" step="1" inputmode="numeric"><button id="next-bucket" type="button" aria-label="下一个 bucket">›</button></div></label></div>
+ <div class="time-filter"><div class="list-heading"><span>10 分钟时间窗</span><button id="all-time" type="button" aria-pressed="true">全天</button></div><label>小时 · 0～23<input id="time-hour" type="number" min="0" max="23" value="0" inputmode="numeric"></label><div id="minute-buttons" class="range-presets" aria-label="选择分钟"></div><input id="window-select" type="hidden" value=""><p id="time-label" class="caption">全天</p></div>
+ <p id="filter-error" class="caption error" role="alert"></p>
+ <section class="range-filter" aria-labelledby="range-title">
+  <h3 id="range-title">cell 范围 <span>可用轨迹数</span></h3>
+  <div class="filter-row">
+   <label>最少（含）<input id="min-k" type="number" min="0" max="1000000000" step="1" value="3" placeholder="不限" aria-describedby="range-hint"></label>
+   <label>最多（含）<input id="max-k" type="number" min="0" max="1000000000" step="1" placeholder="不限" aria-describedby="range-hint"></label>
+  </div>
+  <div class="range-presets" aria-label="常用轨迹数量范围">
+   <button type="button" class="range-preset" data-min="3" data-max="" aria-pressed="true">可训练</button>
+   <button type="button" class="range-preset" data-min="3" data-max="64" aria-pressed="false">3～64 条</button>
+   <button type="button" class="range-preset" data-min="64" data-max="" aria-pressed="false">≥64 条</button>
+   <button type="button" class="range-preset" data-min="" data-max="" aria-pressed="false">全部</button>
+  </div>
+  <p id="range-hint" class="caption">含上下限，留空不限；修改后自动筛选。</p>
+ </section>
+ <button id="random-cell" type="button">随机浏览一个 cell</button><p class="caption">在当前筛选范围内随机选择</p>
+ <div class="list-heading"><span id="list-count">正在载入…</span><span>可用轨迹 / 组</span></div>
+ <div id="cell-list" class="cell-list" aria-label="cell 列表"></div>
+ <div class="pager"><button id="prev-page" type="button">上一页</button><label class="page-entry"><input id="page-number" type="number" min="1" step="1" inputmode="numeric" aria-label="输入页码，按 Enter 跳转"><span id="page-label"></span></label><button id="next-page" type="button">下一页</button></div>
+ <p id="page-error" class="caption error" role="alert"></p><p class="caption">输入页码后按 Enter 跳转。</p><details><summary>按 ID 精确定位（可选）</summary><form id="search-form"><label for="cell-search">跨七天查询 cell_id</label><div class="input-action"><input id="cell-search" type="text" inputmode="numeric" autocomplete="off" placeholder="粘贴已知 cell_id" required><button type="submit">查找</button></div></form><div id="search-result" class="caption" role="status"></div></details>
+</aside>
+<section class="detail-panel" aria-label="cell 与 group 明细">
+ <div id="detail-status" class="notice" role="status">正在打开一个真实 cell…</div>
+ <div id="cell-detail" hidden>
+  <div class="cell-heading"><div><span class="field-label">Cell ID</span><h2 id="cell-title"></h2></div><span class="badge" id="split-label"></span></div>
+  <dl id="cell-meta" class="identity-grid">
+   <div><dt>道路 Link ID</dt><dd id="road-id"></dd></div>
+   <div><dt>分段 Segment</dt><dd id="segment-id"></dd></div>
+   <div><dt>地图版本</dt><dd id="map-version"></dd></div>
+   <div class="window-field"><dt>时间窗口 · 10 分钟</dt><dd id="cell-time"></dd></div>
+  </dl>
+  <div id="cell-flow" class="cell-flow"></div>
+  <div id="no-groups" class="notice" hidden></div>
+  <div id="group-view" hidden>
+   <div class="group-controls">
+    <div class="group-picker"><span class="field-label">Group</span><div id="group-buttons" class="group-buttons" aria-label="选择 group"></div>
+     <div id="group-dropdown" class="step-control" hidden><button id="prev-group" type="button" aria-label="上一个 group">‹</button><select id="group-select" aria-label="选择 group"></select><button id="next-group" type="button" aria-label="下一个 group">›</button></div>
+    </div>
+    <div class="epoch-picker"><label>遮挡 Epoch<input id="epoch" type="number" min="0" max="1000000000" value="0"></label><button id="apply-epoch" type="button">下一轮</button></div>
+   </div>
+   <div id="group-summary" class="group-summary"></div>
+   <div class="legend"><span><i class="visible"></i>可见轨迹的有效 bin</span><span><i class="hidden"></i>被遮挡轨迹的有效 bin</span><span><i class="invalid"></i>无效 bin</span><span>— 补齐空位</span></div>
+   <div id="matrix-host"><svg id="matrix" role="img" aria-label="group 矩阵；纵轴为轨迹位置，横轴为 bin，可点击选择轨迹与 bin"></svg></div>
+   <div class="trajectory-controls">
+    <div><label for="slot-select">轨迹位置</label><div class="step-control"><button id="prev-slot" type="button" aria-label="上一条轨迹">‹</button><select id="slot-select"></select><button id="next-slot" type="button" aria-label="下一条轨迹">›</button></div></div>
+    <div><label for="bin-select">Bin</label><div class="step-control"><button id="prev-bin" type="button" aria-label="上一个 bin">‹</button><select id="bin-select"></select><button id="next-bin" type="button" aria-label="下一个 bin">›</button></div></div>
+   </div>
+   <div id="trajectory-status" class="trajectory-status" aria-live="polite"></div>
+   <div id="sample-id" class="caption break"></div>
+   <div id="bin-detail" hidden>
+    <div class="feature-vector"><div><span>T_clean · 秒</span><strong id="bin-time"></strong></div><div><span>ratio · 覆盖比例</span><strong id="bin-ratio"></strong></div><div><span>bin_valid · 监督标记（非输入）</span><strong id="bin-valid"></strong></div></div>
+    <div id="bin-usage" class="usage"></div>
+    <details open><summary id="pieces-summary">原始 piece → 当前 bin</summary><div class="table-wrap"><table><thead><tr><th>piece</th><th>耗时 / 秒</th><th>ratio_pct</th><th>valid</th><th>observed</th></tr></thead><tbody id="pieces-body"></tbody></table></div></details>
+    <details><summary>展开整条轨迹的 50 个 bin</summary><div class="table-wrap"><table><thead><tr><th>bin</th><th>T_clean / 秒</th><th>ratio</th><th>valid</th><th>本轮用途</th></tr></thead><tbody id="profile-body"></tbody></table></div></details>
+   </div>
+   <p class="caption">展示遮挡前的模型特征 [T_clean, ratio]；bin_valid 是单独的监督标记。被遮挡轨迹的耗时不进入 Encoder；已知 ratio 和时间提供给 Decoder。</p>
+  </div>
+  <details class="source-details"><summary>数据来源与构造参数</summary><div id="source-info" class="caption break"></div></details>
+ </div>
+</section>
+</div>
+</main>
+<footer>trajectory_mlp_v1 · 每组最多 64 条轨迹 · 每条轨迹 50 个 bin · 满 batch 为 512 个 group</footer>
+</body></html>

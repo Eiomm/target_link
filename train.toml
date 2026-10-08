@@ -1,0 +1,20 @@
+# Platform training preset; CLI arguments explicitly override these values.
+time_encoding = "seconds"
+batch_size = 1024
+epochs = 5
+workers = 4
+threads = 4
+seed = 42
+data_seed = 20260921
+m_max = 64
+d_model = 256
+heads = 8
+layers = 4
+decoder_layers = 2
+dropout = 0.1
+lr = 0.0002
+weight_decay = 0.01
+device = "cuda"
+expected_buckets = 128
+train_days = ["20260817", "20260818", "20260819", "20260820", "20260821", "20260822"]
+val_days = ["20260823"]

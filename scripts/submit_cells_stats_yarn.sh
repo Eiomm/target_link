@@ -4,7 +4,7 @@
 # cell = (map_version, target_link_id, seg_idx, window), window from
 # t_seg_enter = t_ref + (T_cum - T_diff) at the segment's first bin.
 #
-#   MODE=local  single-day run on this pod over data/raw_hdfs (whatever hours exist)
+#   MODE=local  local samples explicitly provided through LOCAL_INPUTS
 #   MODE=dry    print the yarn spark-submit command without executing
 #   MODE=yarn   real submission over the full day (default)
 #
@@ -57,9 +57,10 @@ CELLS_ARG=()
 
 case "$MODE" in
   local)
+    : "${LOCAL_INPUTS:?Set LOCAL_INPUTS to local raw Parquet files; the retired data/raw_hdfs copy was removed}"
     exec env -u SPARK_HOME SPARK_LOCAL_DIRS="$SPARK_LOCAL_DIRS" \
         PYSPARK_PYTHON="$QWEN12_PY" "$QWEN12_PY" tools/stats_cells.py \
-        --inputs "data/raw_hdfs/event_hour=${DAY}*/part-*.parquet" \
+        --inputs "$LOCAL_INPUTS" \
         --out "${LOCAL_OUT:-data/_stats/cells_${DAY}}" \
         --master "${LOCAL_MASTER:-local[8]}" --driver-memory 6g \
         --shuffle-partitions "${LOCAL_SHUFFLE_PARTITIONS:-64}" \

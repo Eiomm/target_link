@@ -1,0 +1,909 @@
+{
+  "validation": {
+    "days": [
+      "20260823"
+    ],
+    "files": [
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=0/part-00920-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=0",
+        "bytes": 66142205,
+        "mtime_ns": 1789978434680041896
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=1/part-00129-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=1",
+        "bytes": 65876630,
+        "mtime_ns": 1789978435101148506
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=10/part-00901-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=10",
+        "bytes": 66408742,
+        "mtime_ns": 1789978436612935988
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=100/part-00241-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=100",
+        "bytes": 65929870,
+        "mtime_ns": 1789978436950880927
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=101/part-00876-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=101",
+        "bytes": 66330385,
+        "mtime_ns": 1789978438357937358
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=102/part-00254-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=102",
+        "bytes": 66532603,
+        "mtime_ns": 1789978438767597588
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=103/part-00310-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=103",
+        "bytes": 65474328,
+        "mtime_ns": 1789978439245464334
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=104/part-00562-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=104",
+        "bytes": 66487193,
+        "mtime_ns": 1789978439619645704
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=105/part-00080-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=105",
+        "bytes": 66173808,
+        "mtime_ns": 1789978440239789774
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=106/part-01002-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=106",
+        "bytes": 65507457,
+        "mtime_ns": 1789978440642633597
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=107/part-00785-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=107",
+        "bytes": 65840027,
+        "mtime_ns": 1789978441393678600
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=108/part-00709-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=108",
+        "bytes": 66262506,
+        "mtime_ns": 1789978442117736607
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=109/part-00014-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=109",
+        "bytes": 66245396,
+        "mtime_ns": 1789978442717244634
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=11/part-00761-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=11",
+        "bytes": 66559573,
+        "mtime_ns": 1789978443379795988
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=110/part-00647-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=110",
+        "bytes": 65916979,
+        "mtime_ns": 1789978443877984864
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=111/part-00725-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=111",
+        "bytes": 66462882,
+        "mtime_ns": 1789978444223102859
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=112/part-00045-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=112",
+        "bytes": 66681669,
+        "mtime_ns": 1789978444821997711
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=113/part-00264-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=113",
+        "bytes": 66295324,
+        "mtime_ns": 1789978445353790422
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=114/part-00552-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=114",
+        "bytes": 66195351,
+        "mtime_ns": 1789978446138485127
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=115/part-00015-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=115",
+        "bytes": 66523952,
+        "mtime_ns": 1789978447029961484
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=116/part-00162-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=116",
+        "bytes": 66193695,
+        "mtime_ns": 1789978447392357384
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=117/part-00736-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=117",
+        "bytes": 65762459,
+        "mtime_ns": 1789978447865722071
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=118/part-00796-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=118",
+        "bytes": 66367329,
+        "mtime_ns": 1789978448420728961
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=119/part-00876-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=119",
+        "bytes": 66178588,
+        "mtime_ns": 1789978448821893747
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=12/part-00730-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=12",
+        "bytes": 66482832,
+        "mtime_ns": 1789978449409589883
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=120/part-00755-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=120",
+        "bytes": 66514908,
+        "mtime_ns": 1789978449775363702
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=121/part-00587-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=121",
+        "bytes": 66054373,
+        "mtime_ns": 1789978450187890292
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=122/part-00024-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=122",
+        "bytes": 66215166,
+        "mtime_ns": 1789978450848480785
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=123/part-00364-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=123",
+        "bytes": 66183427,
+        "mtime_ns": 1789978451296384815
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=124/part-00952-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=124",
+        "bytes": 66383610,
+        "mtime_ns": 1789978451635492658
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=125/part-00931-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=125",
+        "bytes": 65813554,
+        "mtime_ns": 1789978452022394576
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=126/part-00024-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=126",
+        "bytes": 66185743,
+        "mtime_ns": 1789978452467788815
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=127/part-00747-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=127",
+        "bytes": 67885910,
+        "mtime_ns": 1789978452941449094
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=13/part-00992-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=13",
+        "bytes": 66261657,
+        "mtime_ns": 1789978453306970592
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=14/part-00577-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=14",
+        "bytes": 66436713,
+        "mtime_ns": 1789978453751119056
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=15/part-00280-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=15",
+        "bytes": 65547469,
+        "mtime_ns": 1789978454220355124
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=16/part-00418-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=16",
+        "bytes": 65962689,
+        "mtime_ns": 1789978454640327519
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=17/part-00667-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=17",
+        "bytes": 65980898,
+        "mtime_ns": 1789978455003084921
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=18/part-00596-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=18",
+        "bytes": 65690600,
+        "mtime_ns": 1789978457478575057
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=19/part-00583-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=19",
+        "bytes": 65944506,
+        "mtime_ns": 1789978458083134318
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=2/part-00362-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=2",
+        "bytes": 66310835,
+        "mtime_ns": 1789978458718900809
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=20/part-00085-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=20",
+        "bytes": 66104226,
+        "mtime_ns": 1789978459186046836
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=21/part-00533-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=21",
+        "bytes": 66572144,
+        "mtime_ns": 1789978459640444218
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=22/part-00871-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=22",
+        "bytes": 66501066,
+        "mtime_ns": 1789978460275391329
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=23/part-00914-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=23",
+        "bytes": 65983195,
+        "mtime_ns": 1789978460823737318
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=24/part-00388-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=24",
+        "bytes": 65632019,
+        "mtime_ns": 1789978461392447182
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=25/part-00679-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=25",
+        "bytes": 65998240,
+        "mtime_ns": 1789978462089010960
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=26/part-00516-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=26",
+        "bytes": 66143535,
+        "mtime_ns": 1789978462484769709
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=27/part-00090-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=27",
+        "bytes": 65994667,
+        "mtime_ns": 1789978462944398711
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=28/part-00381-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=28",
+        "bytes": 66581581,
+        "mtime_ns": 1789978463795849002
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=29/part-00748-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=29",
+        "bytes": 66505974,
+        "mtime_ns": 1789978464301908435
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=3/part-00078-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=3",
+        "bytes": 66295951,
+        "mtime_ns": 1789978471356695615
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=30/part-00835-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=30",
+        "bytes": 66166848,
+        "mtime_ns": 1789978472032731515
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=31/part-00567-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=31",
+        "bytes": 66444739,
+        "mtime_ns": 1789978472403443178
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=32/part-00189-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=32",
+        "bytes": 65744607,
+        "mtime_ns": 1789978472865324311
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=33/part-00441-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=33",
+        "bytes": 65990903,
+        "mtime_ns": 1789978473323544420
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=34/part-00381-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=34",
+        "bytes": 65882190,
+        "mtime_ns": 1789978473961911383
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=35/part-00603-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=35",
+        "bytes": 66072282,
+        "mtime_ns": 1789978474439753458
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=36/part-00128-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=36",
+        "bytes": 66755047,
+        "mtime_ns": 1789978474859997033
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=37/part-00128-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=37",
+        "bytes": 66807994,
+        "mtime_ns": 1789978476390324425
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=38/part-00967-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=38",
+        "bytes": 66424551,
+        "mtime_ns": 1789978477230427077
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=39/part-00529-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=39",
+        "bytes": 66035095,
+        "mtime_ns": 1789978477669910517
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=4/part-00797-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=4",
+        "bytes": 65740588,
+        "mtime_ns": 1789978478178308087
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=40/part-00593-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=40",
+        "bytes": 65190673,
+        "mtime_ns": 1789978478824045267
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=41/part-00259-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=41",
+        "bytes": 66482267,
+        "mtime_ns": 1789978479749199610
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=42/part-00334-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=42",
+        "bytes": 66198088,
+        "mtime_ns": 1789978480187430545
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=43/part-00666-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=43",
+        "bytes": 66355548,
+        "mtime_ns": 1789978481262463521
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=44/part-00458-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=44",
+        "bytes": 66389431,
+        "mtime_ns": 1789978482087611773
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=45/part-00620-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=45",
+        "bytes": 66390408,
+        "mtime_ns": 1789978482818756232
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=46/part-00578-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=46",
+        "bytes": 66070753,
+        "mtime_ns": 1789978483502015809
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=47/part-00230-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=47",
+        "bytes": 66812956,
+        "mtime_ns": 1789978493446784965
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=48/part-00820-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=48",
+        "bytes": 66593589,
+        "mtime_ns": 1789978493976495466
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=49/part-00225-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=49",
+        "bytes": 66030627,
+        "mtime_ns": 1789978494567938519
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=5/part-00526-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=5",
+        "bytes": 66593572,
+        "mtime_ns": 1789978495018429885
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=50/part-00517-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=50",
+        "bytes": 66316366,
+        "mtime_ns": 1789978496460205614
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=51/part-00871-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=51",
+        "bytes": 65537397,
+        "mtime_ns": 1789978496925391094
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=52/part-00853-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=52",
+        "bytes": 66218271,
+        "mtime_ns": 1789978497428230422
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=53/part-00455-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=53",
+        "bytes": 65716431,
+        "mtime_ns": 1789978497988301118
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=54/part-00404-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=54",
+        "bytes": 66259328,
+        "mtime_ns": 1789978498666649274
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=55/part-00276-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=55",
+        "bytes": 66264531,
+        "mtime_ns": 1789978499057946861
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=56/part-00634-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=56",
+        "bytes": 66781017,
+        "mtime_ns": 1789978499776352094
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=57/part-00797-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=57",
+        "bytes": 66509893,
+        "mtime_ns": 1789978500551673382
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=58/part-00253-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=58",
+        "bytes": 66469446,
+        "mtime_ns": 1789978500982736105
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=59/part-00493-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=59",
+        "bytes": 66260217,
+        "mtime_ns": 1789978502204162966
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=6/part-00661-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=6",
+        "bytes": 66299156,
+        "mtime_ns": 1789978502700224636
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=60/part-00172-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=60",
+        "bytes": 65945825,
+        "mtime_ns": 1789978503263021778
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=61/part-00272-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=61",
+        "bytes": 66256927,
+        "mtime_ns": 1789978503809311991
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=62/part-00419-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=62",
+        "bytes": 66380882,
+        "mtime_ns": 1789978504271008568
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=63/part-00425-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=63",
+        "bytes": 65987803,
+        "mtime_ns": 1789978504708087986
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=64/part-00061-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=64",
+        "bytes": 65898338,
+        "mtime_ns": 1789978506991844386
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=65/part-00862-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=65",
+        "bytes": 66137457,
+        "mtime_ns": 1789978507411349844
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=66/part-00843-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=66",
+        "bytes": 66683987,
+        "mtime_ns": 1789978507806596442
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=67/part-00582-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=67",
+        "bytes": 66076942,
+        "mtime_ns": 1789978508312933379
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=68/part-00645-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=68",
+        "bytes": 66366392,
+        "mtime_ns": 1789978509258549039
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=69/part-00642-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=69",
+        "bytes": 66178265,
+        "mtime_ns": 1789978509863149576
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=7/part-00316-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=7",
+        "bytes": 66167295,
+        "mtime_ns": 1789978510469343158
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=70/part-00792-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=70",
+        "bytes": 66199362,
+        "mtime_ns": 1789978510937112265
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=71/part-00528-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=71",
+        "bytes": 66310323,
+        "mtime_ns": 1789978511373580139
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=72/part-00268-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=72",
+        "bytes": 66282501,
+        "mtime_ns": 1789978511784967837
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=73/part-00571-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=73",
+        "bytes": 66022601,
+        "mtime_ns": 1789978512625835710
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=74/part-00441-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=74",
+        "bytes": 66051455,
+        "mtime_ns": 1789978513097678495
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=75/part-00792-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=75",
+        "bytes": 65908596,
+        "mtime_ns": 1789978513694689080
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=76/part-00870-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=76",
+        "bytes": 66530196,
+        "mtime_ns": 1789978514043179090
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=77/part-00308-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=77",
+        "bytes": 66350714,
+        "mtime_ns": 1789978514526925005
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=78/part-00791-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=78",
+        "bytes": 66574326,
+        "mtime_ns": 1789978515062247930
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=79/part-00078-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=79",
+        "bytes": 66564288,
+        "mtime_ns": 1789978515465439307
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=8/part-00136-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=8",
+        "bytes": 66938333,
+        "mtime_ns": 1789978517243132285
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=80/part-00357-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=80",
+        "bytes": 65733990,
+        "mtime_ns": 1789978518308852679
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=81/part-00394-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=81",
+        "bytes": 66597229,
+        "mtime_ns": 1789978519013517675
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=82/part-00482-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=82",
+        "bytes": 65771916,
+        "mtime_ns": 1789978519519242162
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=83/part-00741-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=83",
+        "bytes": 66548625,
+        "mtime_ns": 1789978521072042770
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=84/part-00142-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=84",
+        "bytes": 66377536,
+        "mtime_ns": 1789978521591568855
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=85/part-00964-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=85",
+        "bytes": 66404251,
+        "mtime_ns": 1789978522370038056
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=86/part-00105-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=86",
+        "bytes": 66058544,
+        "mtime_ns": 1789978522823054258
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=87/part-00607-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=87",
+        "bytes": 66446299,
+        "mtime_ns": 1789978523495189372
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=88/part-00318-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=88",
+        "bytes": 65994973,
+        "mtime_ns": 1789978523919055863
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=89/part-00836-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=89",
+        "bytes": 65913640,
+        "mtime_ns": 1789978524570862297
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=9/part-00213-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=9",
+        "bytes": 65541266,
+        "mtime_ns": 1789978524926697425
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=90/part-00475-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=90",
+        "bytes": 66259180,
+        "mtime_ns": 1789978525406259540
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=91/part-01010-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=91",
+        "bytes": 66574570,
+        "mtime_ns": 1789978526317217733
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=92/part-00363-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=92",
+        "bytes": 65892116,
+        "mtime_ns": 1789978526888808021
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=93/part-00254-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=93",
+        "bytes": 66392384,
+        "mtime_ns": 1789978527485978566
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=94/part-00147-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=94",
+        "bytes": 65866326,
+        "mtime_ns": 1789978528420474003
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=95/part-00287-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=95",
+        "bytes": 66462191,
+        "mtime_ns": 1789978530336594938
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=96/part-00126-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=96",
+        "bytes": 66671096,
+        "mtime_ns": 1789978530843970437
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=97/part-00732-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=97",
+        "bytes": 66148016,
+        "mtime_ns": 1789978531226443415
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=98/part-00334-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=98",
+        "bytes": 66336377,
+        "mtime_ns": 1789978531778553517
+      },
+      {
+        "path": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823/observations_v2/day=20260823/bucket=99/part-00670-e69d80fa-cfbf-46ed-ae64-11e0bddfc787.c000.snappy.parquet",
+        "day": "20260823",
+        "bucket": "bucket=99",
+        "bytes": 67984564,
+        "mtime_ns": 1789978534943129862
+      }
+    ],
+    "metadata_sha256": "6293d62d501a4a906930ee2856f223b64727c6c6556c9efb60eca0c43d012285",
+    "prepared_artifacts": [],
+    "partitions": 128,
+    "fingerprint_kind": "path/size/mtime metadata, not parquet content hash"
+  }
+}

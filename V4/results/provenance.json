@@ -1,0 +1,101 @@
+{
+  "artifacts": [
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/best.pt",
+      "copy": "V4/results/training/best.pt",
+      "bytes": 60373582,
+      "sha256": "7c3edc9442ff7917b54f27ea4e1ee4288f6a7096f50d94ddbefcc0996b7adca2"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/config.json",
+      "copy": "V4/results/training/config.json",
+      "bytes": 1983,
+      "sha256": "a7755c18a12825a1019d90727581011b1fe591147448c70d9c1cf8c77306a17b"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/data_manifest.json",
+      "copy": "V4/results/training/data_manifest.json",
+      "bytes": 311858,
+      "sha256": "3cb4a05b2423427aee2dbb2500120480f99564fd774db42336e4255e9a1f6258"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/epoch_diagnostics.csv",
+      "copy": "V4/results/training/epoch_diagnostics.csv",
+      "bytes": 226,
+      "sha256": "e24b6c0870f16f41d8c9941169998b8a3d0a605b7db68571d3ca40bb62744dcb"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/loss_curve.csv",
+      "copy": "V4/results/training/loss_curve.csv",
+      "bytes": 82,
+      "sha256": "6b31ea78f5cbd8efad1d5eb6939491941eed6f059cfd722aef67ab9cf7dbe5c5"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/loss_curve.png",
+      "copy": "V4/results/training/loss_curve.png",
+      "bytes": 53393,
+      "sha256": "7e57657c77a3534da2c11c5407cf44dda739064e5d99930953f8b24a6093e0d1"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/loss_curve.svg",
+      "copy": "V4/results/training/loss_curve.svg",
+      "bytes": 41519,
+      "sha256": "acc0a4882e052fcfb8c12bc574401a69f0239a2a959b4a06f4b382b66a16a145"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/metrics.jsonl",
+      "copy": "V4/results/training/metrics.jsonl",
+      "bytes": 396533,
+      "sha256": "3e207c30b96913f20fa1405c633f7c5ebc9f6e0943543885a5288afbb46aafaf"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/step_metrics.csv",
+      "copy": "V4/results/training/step_metrics.csv",
+      "bytes": 453345,
+      "sha256": "276f4c6bd798a211b91956890e5eb6d008522302017be2eab83930a371d60c88"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/step_trends.png",
+      "copy": "V4/results/training/step_trends.png",
+      "bytes": 141671,
+      "sha256": "dcb9e2e0050dc9147655eb56eb85f91e73937fda1e3836f8ee97bdc252391ad5"
+    },
+    {
+      "source": "runtime/2026-09-22/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts/training_diagnostics.png",
+      "copy": "V4/results/training/training_diagnostics.png",
+      "bytes": 104189,
+      "sha256": "6921701f2bfb38e85981238cca31a4d4fce2b99a99f1948210363f16cb947f26"
+    },
+    {
+      "source": "runtime/2026-09-23/visible_mean_20260923_110905_1029/artifacts/comparison.json",
+      "copy": "V4/results/comparison/comparison.json",
+      "bytes": 1470,
+      "sha256": "04b2bb25b466d32a8d850c192e798dbc7989ae329ef90eb4b243065e019d11ba"
+    },
+    {
+      "source": "runtime/2026-09-23/visible_mean_20260923_110905_1029/artifacts/config.json",
+      "copy": "V4/results/comparison/config.json",
+      "bytes": 1239,
+      "sha256": "61a6df8437ce25a04a0418bf245b38341343b3fe01843517765464084cc6537d"
+    },
+    {
+      "source": "runtime/2026-09-23/visible_mean_20260923_110905_1029/artifacts/data_manifest.json",
+      "copy": "V4/results/comparison/data_manifest.json",
+      "bytes": 46294,
+      "sha256": "c87d470e54773edeee4c26d574301542ade001b68e40d69cc4ab0c6b1d1ba3ac"
+    },
+    {
+      "source": "runtime/2026-09-23/visible_mean_20260923_110905_1029/artifacts/metrics.json",
+      "copy": "V4/results/comparison/metrics.json",
+      "bytes": 259279,
+      "sha256": "1bfab4476692aa0ab345cca152445ce499cbd0b59fac90c6950580614149619d"
+    },
+    {
+      "source": "runtime/2026-09-23/visible_mean_20260923_110905_1029/artifacts/comparison.md",
+      "copy": "V4/results/comparison/comparison.md",
+      "bytes": 1079,
+      "sha256": "871df9fe73bf2b68ac80591220ce80be95cd4fdb0f906e5e99bb7b024561611d"
+    }
+  ],
+  "code_provenance": "V4 code isolated from the explicit three-channel implementation present before refactoring; original training source snapshot is unavailable. Historical source hashes in results are preserved unchanged."
+}

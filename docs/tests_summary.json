@@ -1,0 +1,22 @@
+{
+  "tests": 229,
+  "passed": 226,
+  "failed": 0,
+  "errors": 0,
+  "skipped": [
+    {
+      "test": "tests.test_prepare_tensors_yarn.test_live_jvm_filesystem_and_executor_transport",
+      "reason": "Set RUN_SPARK_INTEGRATION=1 for actual Spark/JVM filesystem check"
+    },
+    {
+      "test": "tests.test_raw_training_tensors.test_raw_transform_and_full_publication",
+      "reason": "Set RUN_RAW_SPARK_TEST=1 for local Spark integration"
+    },
+    {
+      "test": "trajectory_mae.tests.test_visible_mean_benchmark.test_gpu_and_cpu_complete_passes_match",
+      "reason": "CUDA unavailable"
+    }
+  ],
+  "seconds": 163.109,
+  "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q -rs --disable-warnings"
+}

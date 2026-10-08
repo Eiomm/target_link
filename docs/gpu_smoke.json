@@ -1,0 +1,29 @@
+{
+  "device": "cuda",
+  "synthetic": true,
+  "trajectories": 20,
+  "batch_size": 1,
+  "workers": 0,
+  "epochs": 1,
+  "architecture": "unchanged V6 defaults",
+  "checkpoint_reload_metrics_identical": true,
+  "peak_process_rss_GiB": 1.5691070556640625,
+  "container_before": {
+    "limit": 32212254720,
+    "used": 7752945664
+  },
+  "container_after": {
+    "limit": 32212254720,
+    "used": 9193377792
+  },
+  "exit_code": 0,
+  "container_peak_observed_GiB": 8.600994110107422,
+  "stop_threshold_GiB": 20.0,
+  "sample_interval_seconds": 0.2,
+  "device_name": "NVIDIA RTX A6000",
+  "gpu_peak_allocated_MiB_train_and_final_validation": 170.0791015625,
+  "gpu_memory_used_MiB_after_process_exit": 0,
+  "gpu_check_passed": true,
+  "scope": "20 synthetic trajectories, full V6 architecture, 2 optimizer steps; not a full real-data memory benchmark",
+  "initial_cuda_error_reason": "GPU devices were hidden by execution sandbox; actual GPU run used authorized host execution"
+}

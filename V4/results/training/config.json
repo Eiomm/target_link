@@ -1,0 +1,61 @@
+{
+  "mode": "train",
+  "data": [
+    "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_train"
+  ],
+  "val_data": [
+    "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/cell_mlp_validation_20260823"
+  ],
+  "train_days": [
+    "20260817",
+    "20260818",
+    "20260819",
+    "20260820",
+    "20260821",
+    "20260822"
+  ],
+  "val_days": [
+    "20260823"
+  ],
+  "out": "/nfs/dataset-ofs-494-1/project/user/junao/target_link/runtime/traj_mae_v4_raw_seconds_seed42_20260922_232119_982/artifacts",
+  "checkpoint": null,
+  "m_max": 64,
+  "input_channels": 3,
+  "d_model": 256,
+  "heads": 8,
+  "layers": 4,
+  "decoder_layers": 2,
+  "time_encoding": "seconds",
+  "dropout": 0.1,
+  "batch_size": 2048,
+  "epochs": 2,
+  "lr": 0.0002,
+  "weight_decay": 0.01,
+  "seed": 42,
+  "data_seed": 20260921,
+  "workers": 8,
+  "threads": 4,
+  "device": "cuda",
+  "max_groups": 0,
+  "groups_per_partition": 0,
+  "bootstrap": 2000,
+  "smoke_groups": 128,
+  "smoke_steps": 20,
+  "log_every": 20,
+  "plot_every": 1000,
+  "source_sha256": {
+    "run.py": "fc8fab41fe2bbe6932df37abc4e3af2bc505fe10b33767c190b17c89937415f0",
+    "data.py": "d2939895c59cc49304e3330f4af050759873cdd17ef101c52fee28e7cd12517b",
+    "model.py": "86050680f41d3280863a46aab716e2aa619510dc24ec594aeff2416f1d6f6951",
+    "evaluation.py": "c3c60edc558c34d66ffb42ad5017de09ed3517f66cd6e2319ec0db84309f385d",
+    "prepared.py": "b84a4abb259c125df2d9dcc0d1a26c0ce6d20e0899c15b7e1d5474cbd640fd51",
+    "tensor_corpus.py": "1fe3ea97f137c3851d6dbfde3a1c1b08e1d1d4d4f828a5068ed066b9e56ca732",
+    "tools/plot_loss.py": "1cb1f01c8e83b0ab1d74eea279a5d27e93e05c5fece8c1ff585bda81b9df181b"
+  },
+  "format": "trajectory_mlp_mae_known_ratio_v4",
+  "validation_mask_epoch": 1000000,
+  "label_provenance": "existing valid upstream-interpolated times accepted by user",
+  "upstream_interpolation_audit": "out of scope by user instruction",
+  "created_at": "2026-09-22T15:22:11.864346+00:00",
+  "no_sealed_test": true
+}

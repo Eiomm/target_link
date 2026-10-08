@@ -22,3 +22,13 @@ __pycache__/
 # --- misc ---
 .DS_Store
 *.swp
+
+# Local evidence and generated deliverables
+/outputs/
+/additiondata/
+.pytest_cache/
+
+# Local Python environment
+.venv/
+.env
+.env.*

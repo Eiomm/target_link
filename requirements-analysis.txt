@@ -1,0 +1,3 @@
+-r requirements.txt
+# Optional census SQL tools; not needed for training.
+duckdb

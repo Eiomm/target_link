@@ -1,0 +1,8 @@
+{
+  "exit_code": 0,
+  "train_days": 6,
+  "validation_days": 1,
+  "buckets_per_day": 128,
+  "training_started": false,
+  "log": "/tmp/target_link_v6_dryrun_20261008/console.log"
+}

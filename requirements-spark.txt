@@ -1,0 +1,3 @@
+-r requirements.txt
+# Local Spark validation; YARN uses its platform-provided Spark runtime.
+pyspark==3.5.9

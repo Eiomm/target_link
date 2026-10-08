@@ -1,0 +1,41 @@
+{
+  "eval_mask_id": "13cf80e3207597a00aab6f7f753c961ba14f4df5f8418756a171049a92190294",
+  "epochs": [
+    {
+      "epoch": 1,
+      "metrics": {
+        "bin_mae_seconds": {
+          "baseline": 0.7822523376104003,
+          "model": 0.5550923832636057,
+          "model_minus_baseline": -0.2271599543467946,
+          "improvement_percent": 29.03921706910019
+        },
+        "bin_rmse_seconds": {
+          "baseline": 3.702437800072586,
+          "model": 3.5315818805091843,
+          "model_minus_baseline": -0.17085591956340185,
+          "improvement_percent": 4.614687100484233
+        },
+        "trajectory_mae_seconds": {
+          "baseline": 7.159232283504887,
+          "model": 6.133908441603787,
+          "model_minus_baseline": -1.0253238419011002,
+          "improvement_percent": 14.321701005057216
+        },
+        "trajectory_rmse_seconds": {
+          "baseline": 14.637135628800614,
+          "model": 15.937815852114007,
+          "model_minus_baseline": 1.3006802233133925,
+          "improvement_percent": -8.886166366827414
+        },
+        "group_balanced_bin_mae_seconds": {
+          "baseline": 1.5813672215616794,
+          "model": 1.126244496729613,
+          "model_minus_baseline": -0.4551227248320664,
+          "improvement_percent": 28.780331261869073
+        }
+      }
+    }
+  ],
+  "interpretation": "正改善率表示模型误差更低；这是同一验证集上的点估计，不是独立测试或显著性检验。"
+}

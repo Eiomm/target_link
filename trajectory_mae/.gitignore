@@ -1,0 +1,37 @@
+# Local datasets, checkpoints, reports and temporary analysis files.
+/data/
+/runtime/
+/runs/
+/reports/
+/data_atlas/
+/diagnostics/*.json
+/diagnostics/*.txt
+
+# Only deliberately synthetic examples belong in the repository.
+/examples/*
+!/examples/README.md
+!/examples/short_link_50m.svg
+!/examples/short_link_50m.summary.json
+!/examples/offset_coverage_170m.svg
+!/examples/offset_coverage_170m.summary.json
+
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.env.*
+*.swp
+*.swo
+*.log
+*.pt
+*.pth
+*.ckpt
+*.parquet
+*.arrow
+*.npy
+*.npz
+*.duckdb*
+*.tmp
+.DS_Store

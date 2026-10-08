@@ -1,0 +1,30 @@
+[
+  {
+    "version": 6,
+    "time_encoding": "seconds",
+    "output_max_abs_diff": 0,
+    "loss_abs_diff": 0,
+    "gradient_max_abs_diff": 0
+  },
+  {
+    "version": 6,
+    "time_encoding": "bucket30",
+    "output_max_abs_diff": 0,
+    "loss_abs_diff": 0,
+    "gradient_max_abs_diff": 0
+  },
+  {
+    "version": 4,
+    "time_encoding": "seconds",
+    "output_max_abs_diff": 0,
+    "loss_abs_diff": 0,
+    "gradient_max_abs_diff": 0
+  },
+  {
+    "version": 4,
+    "time_encoding": "bucket30",
+    "output_max_abs_diff": 0,
+    "loss_abs_diff": 0,
+    "gradient_max_abs_diff": 0
+  }
+]
